@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "description": "Canonical financial metrics and their semantic aliases",
+  "metrics": [
+
+    {
+      "metric_name": "revenue_total",
+      "aliases": ["total revenue", "net revenue", "net sales", "sales", "turnover", "operating revenue"]
+    },
+    {
+      "metric_name": "cost_of_revenue",
+      "aliases": ["cost of goods sold", "cogs", "cost of sales", "direct costs"]
+    },
+    {
+      "metric_name": "gross_profit",
+      "aliases": ["gross profit", "gross income"]
+    },
+    {
+      "metric_name": "operating_expenses_total",
+      "aliases": ["operating expenses", "total operating expenses", "opex"]
+    },
+    {
+      "metric_name": "employee_costs",
+      "aliases": ["employee expenses", "staff costs", "payroll", "salaries and wages"]
+    },
+    {
+      "metric_name": "selling_marketing_expense",
+      "aliases": ["sales and marketing", "marketing expense", "selling expenses", "advertising"]
+    },
+    {
+      "metric_name": "rnd_expense",
+      "aliases": ["research and development", "r&d", "product development expense"]
+    },
+    {
+      "metric_name": "general_admin_expense",
+      "aliases": ["general and administrative", "g&a", "administrative expenses", "overheads"]
+    },
+    {
+      "metric_name": "operating_income",
+      "aliases": ["operating income", "operating profit", "ebit"]
+    },
+    {
+      "metric_name": "interest_expense",
+      "aliases": ["interest expense", "finance cost", "borrowing cost"]
+    },
+    {
+      "metric_name": "tax_expense",
+      "aliases": ["tax expense", "income tax", "provision for tax"]
+    },
+    {
+      "metric_name": "net_income",
+      "aliases": ["net income", "net profit", "profit after tax", "pat"]
+    },
+
+    {
+      "metric_name": "cash_from_operations",
+      "aliases": ["cash flow from operations", "operating cash flow", "cfo"]
+    },
+    {
+      "metric_name": "capital_expenditure",
+      "aliases": ["capital expenditure", "capex", "purchase of fixed assets"]
+    },
+    {
+      "metric_name": "cash_from_investing",
+      "aliases": ["cash flow from investing", "investing cash flow"]
+    },
+    {
+      "metric_name": "cash_from_financing",
+      "aliases": ["cash flow from financing", "financing cash flow"]
+    },
+    {
+      "metric_name": "dividends_paid",
+      "aliases": ["dividends paid", "equity dividends"]
+    },
+    {
+      "metric_name": "net_change_in_cash",
+      "aliases": ["net change in cash", "net increase in cash", "cash movement"]
+    },
+    {
+      "metric_name": "cash_end_period",
+      "aliases": ["closing cash balance", "cash at end of period", "ending cash"]
+    },
+
+    {
+      "metric_name": "cash_and_equivalents",
+      "aliases": ["cash and cash equivalents", "cash balance", "bank balance"]
+    },
+    {
+      "metric_name": "short_term_investments",
+      "aliases": ["short term investments", "marketable securities"]
+    },
+    {
+      "metric_name": "total_current_assets",
+      "aliases": ["current assets", "total current assets"]
+    },
+    {
+      "metric_name": "total_assets",
+      "aliases": ["total assets"]
+    },
+    {
+      "metric_name": "short_term_debt",
+      "aliases": ["short term borrowings", "current debt"]
+    },
+    {
+      "metric_name": "long_term_debt",
+      "aliases": ["long term borrowings", "non current debt"]
+    },
+    {
+      "metric_name": "total_liabilities",
+      "aliases": ["total liabilities"]
+    },
+    {
+      "metric_name": "shareholders_equity",
+      "aliases": ["shareholder equity", "owners equity", "net worth"]
+    },
+
+    {
+      "metric_name": "employee_count",
+      "aliases": ["number of employees", "headcount", "staff strength"]
+    },
+    {
+      "metric_name": "avg_employee_cost",
+      "aliases": ["average employee cost", "cost per employee"]
+    },
+    {
+      "metric_name": "branch_count",
+      "aliases": ["branch count", "delivery centers", "office locations"]
+    },
+    {
+      "metric_name": "customer_count",
+      "aliases": ["number of customers", "active customers", "clients"]
+    },
+    {
+      "metric_name": "segment_revenue",
+      "aliases": ["revenue by segment", "segment wise revenue"]
+    }
+  ]
+}
