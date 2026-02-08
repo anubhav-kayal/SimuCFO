@@ -72,9 +72,8 @@ const FileUpload = () => {
     const formData = new FormData();
     formData.append("pdfFile", file);
 
-    try {
-      // REPLACE with your actual backend URL
-      const response = await fetch("https://your-backend-api.com/upload", {
+    try {        
+      const response = await fetch("http://localhost:5000/upload", {
         method: "POST",
         body: formData,
       });
@@ -82,11 +81,11 @@ const FileUpload = () => {
       if (response.ok) {
         setUploadProgress(100);
         setStatus('success');
-        // setTimeout(() => setFile(null), 3000); // Optional: Reset after success
       } else {
         setStatus('error');
       }
     } catch (error) {
+        
       console.error("Upload failed", error);
       setStatus('error');
     } finally {
