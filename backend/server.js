@@ -1,8 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL; 
+const supabaseKey = process.env.SUPABASE_KEY; // Use SERVICE ROLE key for backend access!
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
 const PORT = 5000;
@@ -38,18 +44,40 @@ const upload = multer({
 });
 
 
-app.post('/upload', upload.single('pdfFile'), (req, res) => {  
+app.post('/upload', upload.single('pdfFile'), async (req, res) => {  
   try {
     if (!req.file) {
       return res.status(400).send({ message: 'No file uploaded' });
     }
     
-    console.log('File received:', req.file);
+    const fileContent = fs.readFileSync(req.file.path);
+
+   
+    const { data, error } = await supabase
+      .storage
+      .from('pdfs') // The bucket name you created
+      .upload(req.file.filename, fileContent, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    // 5. Get the Public URL (If bucket is public)
+    const { data: publicData } = supabase
+      .storage
+      .from('pdfs')
+      .getPublicUrl(data.path);
+
+    // 6. Respond to Frontend
     res.status(200).send({ 
-      message: 'File uploaded successfully', 
-      filePath: req.file.path 
+      message: 'File uploaded to Supabase successfully', 
+      supabasePath: data.path,
+      publicUrl: publicData.publicUrl 
     });
   } catch (error) {
+    console.log(error.message);
+    
     res.status(500).send({ message: error.message });
   }
 });
