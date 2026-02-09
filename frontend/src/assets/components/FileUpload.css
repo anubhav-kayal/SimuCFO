@@ -7,14 +7,14 @@
   --text-secondary: #6b7280;
 }
 
-body {
+/* body {
   background-image: url('../../assets/images/data.jpg');
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   font-family: 'Segoe UI', sans-serif;
-}
+} */
 
 /* --- Card Container --- */
 .upload-card {
