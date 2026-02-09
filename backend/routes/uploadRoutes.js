@@ -6,7 +6,6 @@ const { handleUpload } = require('../controllers/uploadController');
 
 const router = express.Router();
 
-// Configure Multer storage for uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = 'uploads/';
