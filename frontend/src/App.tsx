@@ -1,21 +1,27 @@
-// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Import Components
 import Navbar from './assets/components/Navbar';
 import Hero from './assets/components/Home';
-import About from './assets/components/about'; 
-import Service from './assets/components/Service';
+import About from './assets/components/about';
+import Service from './assets/components/Service'; // If you made this earlier
+import Pricing from './assets/components/Pricing'; // <--- NEW IMPORT
+import FAQ from './assets/components/FAQ';         // <--- NEW IMPORT
 import ProductPage from './pages/ProductPage';
+import Contact from './assets/components/Contact';
+import Footer from './assets/components/Footer';
 
-// Create a "Home" component that bundles the landing page sections
+// The Landing Page Combination
 const Home = () => (
   <>
     <Navbar />
     <Hero />
     <About />
-    <Service/>
+    <Service />
+    <Pricing /> 
+    <FAQ />  
+    <Contact/> 
+    <Footer/> 
   </>
 );
 
@@ -23,10 +29,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* The Landing Page (localhost:5173/) */}
         <Route path="/" element={<Home />} />
-        
-        {/* The Product Tool (localhost:5173/product) */}
         <Route path="/product" element={<ProductPage />} />
       </Routes>
     </Router>
