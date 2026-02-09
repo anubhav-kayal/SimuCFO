@@ -1,0 +1,127 @@
+/* Navbar Layout */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 5%;
+  height: 120px;
+  background: transparent;
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  z-index: 100;
+}
+
+.nav-logo {
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: #333;
+  z-index: 101;
+  letter-spacing: -0.5px;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 3.5rem;
+  margin-right: 250px;
+  /* Space for the blob */
+  z-index: 101;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #666;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: #7C3AED;
+}
+
+/* The Top Right Purple Blob */
+/* The Top Right Purple Blob */
+.nav-contact-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 350px;
+  /* Reduced width to avoid overlapping links */
+  height: 100%;
+  background: #8b5cf6;
+  border-bottom-left-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 40px;
+  /* Offset to center button visually in remaining space */
+  z-index: 102;
+  /* Ensure it stays on top of other things if needed, but below links if we wanted overlap (we don't) */
+}
+
+/* Ensure links are on top if they ever overlap, but we are moving the blob away */
+.nav-links {
+  margin-right: 320px;
+  /* Push links to the left of the blob */
+  z-index: 103;
+}
+
+/* Specific hover effect for links to ensure visibility */
+.nav-links a:hover {
+  color: #7C3AED;
+}
+
+/* Contact button styling */
+.contact-btn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  color: white;
+  padding: 0.7rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.contact-btn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  color: white;
+  padding: 0.7rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+}
+
+.contact-btn:hover {
+  background: white;
+  color: #7C3AED;
+}
+
+/* Responsive Hide for Mobile */
+@media (max-width: 900px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-contact-wrapper {
+    width: 120px;
+    height: 100px;
+    border-bottom-left-radius: 80px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+  }
+
+  .contact-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    border: 1px solid white;
+  }
+}
