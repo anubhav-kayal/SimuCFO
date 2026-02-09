@@ -69,3 +69,4 @@ ENV/
 *.tmp
 *.temp
 .cache/
+*.pdf
