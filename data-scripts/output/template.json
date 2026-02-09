@@ -1,0 +1,18 @@
+{
+  "question": "How volatile is revenue compared to the last 4 quarters?",
+  "nlp_parsing": {
+    "intent": "volatility_comparison",
+    "metric": "revenue",
+    "parameters": {
+      "time_period": "last_4_quarters"
+    }
+  },
+  "answer": {
+    "coefficient_of_variation": 0.7484513081981019,
+    "volatility_level": "high",
+    "probability_decline": 0.1215,
+    "risk_level": "high"
+  },
+  "reasoning": "Revenue volatility (coefficient of variation) is 0.748, indicating high volatility. Probability of revenue decline is 12.2%.",
+  "metrics": {}
+}
