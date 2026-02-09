@@ -410,7 +410,7 @@ Prob Should Hire: {results.get('probability_should_hire', 0)*100:.2f}%"""
     plt.tight_layout()
     plt.savefig('monte_carlo_bell_curve.png', dpi=300, bbox_inches='tight')
     print("\n📊 Graph saved as 'monte_carlo_bell_curve.png'")
-    plt.show()
+    plt.close()  # Close figure instead of showing (non-blocking)
 
 
 def plot_revenue_distribution(sim_data: Dict):
@@ -451,7 +451,7 @@ def plot_revenue_distribution(sim_data: Dict):
     plt.tight_layout()
     plt.savefig('revenue_distribution.png', dpi=300, bbox_inches='tight')
     print("\n📊 Revenue distribution graph saved as 'revenue_distribution.png'")
-    plt.show()
+    plt.close()  # Close figure instead of showing (non-blocking)
 
 
 def plot_cash_distribution(sim_data: Dict):
@@ -496,4 +496,4 @@ def plot_cash_distribution(sim_data: Dict):
     plt.tight_layout()
     plt.savefig('cash_distribution.png', dpi=300, bbox_inches='tight')
     print("\n📊 Cash distribution graph saved as 'cash_distribution.png'")
-    plt.show()
+    plt.close()  # Close figure instead of showing (non-blocking)
