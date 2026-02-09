@@ -14,7 +14,7 @@ from backboard import BackboardClient
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
 PDF_FOLDER_PATH = os.path.join(BASE_DIR, "inputs")
 OUTPUT_FILE = os.path.join(BASE_DIR, "output", "monte_carlo_final_data.csv")
-API_KEY = os.environ.get("BACKBOARD_API_KEY", "espr_Hlape8JgiHiwIEt-Ash9LE55tIyTECHENuUHRAYjlKU")
+API_KEY = os.environ.get("BACKBOARD_API_KEY", "")
 
 # 1. THE EXACT 32-METRIC SCHEMA (Identical to your working script)
 METRICS_SCHEMA = [
