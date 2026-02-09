@@ -92,54 +92,100 @@ exports.handleUpload = async (req, res) => {
 
       console.log('All downloads complete.');
 
-      // 3. Run Python Script Synchronously
+      // 3. Run Python Script Synchronously (PDF Processor)
       const pythonPath = path.join(__dirname, '../../data-scripts/extractors/venv/bin/python');
       const scriptPath = path.join(__dirname, '../../data-scripts/extractors/pdfProcessor.py');
 
-      console.log('Executing Python script...');
-      
+      console.log('Executing PDF Processor...');
+
       try {
         const { stdout, stderr } = await exec(`"${pythonPath}" "${scriptPath}"`);
-        
-        if (stderr) {
-          console.error(`Script stderr: ${stderr}`);
-        }
-        console.log(`Script stdout: ${stdout}`);
+        if (stderr) console.error(`PDF Processor stderr: ${stderr}`);
+        console.log(`PDF Processor stdout: ${stdout}`);
       } catch (scriptError) {
-        console.error(`Error executing script: ${scriptError.message}`);
-        // Decide if you want to fail the request or continue. 
-        // For now, let's throw to notify frontend of failure.
-        throw new Error(`Script execution failed: ${scriptError.message}`);
+        console.error(`Error executing PDF Processor: ${scriptError.message}`);
+        throw new Error(`PDF Processor failed: ${scriptError.message}`);
       }
 
-      // 4. Read the generated JSON file
-      const jsonOutputPath = path.join(__dirname, '../../data-scripts/output/template.json');
-      let jsonData = {};
+      // 4. Run Monte Carlo Simulation
+      // Use the 'question' from the request body, or a default if missing
+      const userQuestion = req.body.question || "Run a comprehensive financial risk analysis";
 
-      if (fs.existsSync(jsonOutputPath)) {
-        try {
-            const rawData = fs.readFileSync(jsonOutputPath, 'utf-8');
-            jsonData = JSON.parse(rawData);
-            console.log('Successfully read template.json');
-        } catch (jsonError) {
-            console.error('Error reading/parsing template.json:', jsonError);
-            // Non-fatal, return empty object or partial data
+      const monteCarloScriptPath = path.join(__dirname, '../../ml-simulator/montecarlo.py');
+      const mlSimulatorDir = path.join(__dirname, '../../ml-simulator');
+
+      console.log(`Running Monte Carlo simulation: ${monteCarloScriptPath}`);
+      console.log(`Question: ${userQuestion}`);
+
+      const escapedQuestion = userQuestion.replace(/"/g, '\\"');
+
+      try {
+        // Use the SAME python path as pdfProcessor (venv)
+        const { stdout: mcStdout, stderr: mcStderr } = await exec(`"${pythonPath}" "${monteCarloScriptPath}" "${escapedQuestion}"`, {
+          cwd: mlSimulatorDir
+        });
+        console.log('Monte Carlo stdout:', mcStdout);
+        if (mcStderr) console.error('Monte Carlo stderr:', mcStderr);
+      } catch (mcError) {
+        console.error(`Error executing Monte Carlo: ${mcError.message}`);
+        throw new Error(`Monte Carlo simulation failed: ${mcError.message}`);
+      }
+
+      // 5. Read the Computed Metrics JSON (Simpler for Frontend)
+      const jsonOutputPath = path.join(mlSimulatorDir, 'computed_metrics.json');
+      let analysisResult = null;
+
+      try {
+        if (fs.existsSync(jsonOutputPath)) {
+          const jsonContent = fs.readFileSync(jsonOutputPath, 'utf8');
+          analysisResult = JSON.parse(jsonContent);
+          console.log("✅ Successfully read Computed Metrics JSON");
+        } else {
+          console.warn("⚠️ Computed Metrics JSON output file not found:", jsonOutputPath);
         }
+      } catch (readError) {
+        console.error("❌ Error reading Computed Metrics JSON:", readError);
+      }
+
+      res.status(200).json({
+        message: 'Files processed and simulation complete',
+        analysis: analysisResult
+      });
+      // montecarlo.py can output 'monte_carlo_analysis.json' (comprehensive) or 'computed_metrics.json' (metrics only)
+      const fullAnalysisPath = path.join(mlSimulatorDir, 'monte_carlo_analysis.json');
+      const metricsPath = path.join(mlSimulatorDir, 'computed_metrics.json');
+
+      let responseData = {};
+
+      if (fs.existsSync(fullAnalysisPath)) {
+        const fullAnalysis = JSON.parse(fs.readFileSync(fullAnalysisPath, 'utf-8'));
+        responseData = {
+          question: question,
+          answer: fullAnalysis.analysis_results?.computed_answer || {},
+          reasoning: fullAnalysis.analysis_results?.llm_explanation || "Analysis completed."
+        };
+      } else if (fs.existsSync(metricsPath)) {
+        const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf-8'));
+        responseData = {
+          question: question,
+          answer: metrics,
+          reasoning: "Analysis completed (Metrics only)."
+        };
       } else {
-          console.warn('template.json not found at:', jsonOutputPath);
+        throw new Error("No analysis output file found.");
       }
 
       return res.status(200).send({
-        message: 'Files processed successfully.',
+        message: 'Analysis completed successfully.',
         files: results,
-        data: jsonData
+        data: responseData
       });
     }
-    
+
     // Fallback if listError occurred (though rare)
     return res.status(200).send({
-        message: 'Files uploaded, but processing skipped due to listing error.',
-        files: results
+      message: 'Files uploaded, but processing skipped due to listing error.',
+      files: results
     });
 
   } catch (error) {

@@ -19,6 +19,7 @@ const Data = () => {
 
     useEffect(() => {
         if (location.state?.data) {
+            console.log("📊 Received Analysis Data:", location.state.data); // LOGGING ADDED HERE
             setAnalysisData(location.state.data);
         }
     }, [location.state]);

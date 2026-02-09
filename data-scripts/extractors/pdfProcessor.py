@@ -14,7 +14,7 @@ from backboard import BackboardClient
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
 PDF_FOLDER_PATH = os.path.join(BASE_DIR, "inputs")
 OUTPUT_FILE = os.path.join(BASE_DIR, "output", "monte_carlo_final_data.csv")
-API_KEY = os.environ.get("BACKBOARD_API_KEY", "-Ash9LE55tIyTECHENuUHRAYjlKU")
+API_KEY = os.environ.get("BACKBOARD_API_KEY", "espr_v98ne5cw6JLXhlLiFQNJrRlEdqOeWRbKiFaAJQ4L7oc")
 
 # 1. THE EXACT 32-METRIC SCHEMA (Identical to your working script)
 METRICS_SCHEMA = [
@@ -201,6 +201,7 @@ async def process_file(client, pdf_path):
             )
             
             content = getattr(response, 'content', str(response)).strip()
+            print(f"   RAW AI RESPONSE: {content[:500]}...") # DEBUG LOG
             content = content.replace("```csv", "").replace("```", "").strip()
             
             data = {"period": detected_period} # REMOVED source_file here
@@ -246,6 +247,8 @@ async def main():
         if result:
             all_results.append(result)
             save_to_csv(all_results)
+    
+    print(f"✅ Extracted data for {len(all_results)} files. Updating CSV...")
 
 def save_to_csv(results):
     if not results: return

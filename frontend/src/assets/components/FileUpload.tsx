@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import { FaCloudUploadAlt, FaFilePdf, FaTrash } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+interface FileUploadProps {
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+}
 
-const FileUpload = () => {
-  const [files, setFiles] = useState<File[]>([]);
+const FileUpload = ({ files, setFiles }: FileUploadProps) => {
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
 
   // --- LOGIC SECTION ---
   const handleDrag = (e: React.DragEvent) => {
@@ -53,16 +54,6 @@ const FileUpload = () => {
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
-    if (files.length <= 1) {
-    }
-  };
-
-  const handleUpload = () => {
-    if (files.length === 0) return;
-
-    // Validate we have files
-    // Navigate to /processing and pass the files in state
-    navigate('/processing', { state: { files: files } });
   };
 
   // --- UI SECTION ---
@@ -132,18 +123,6 @@ const FileUpload = () => {
           onChange={handleChange}
         />
       </div>
-
-      {/* Progress & Actions */}
-      {files.length > 0 && (
-        <div className="mt-6">
-          <button
-            className="w-full py-4 bg-[#8c52ff] text-white rounded-xl font-bold text-lg shadow-[0_10px_20px_rgba(140,82,255,0.3)] hover:shadow-[0_15px_30px_rgba(140,82,255,0.4)] transition-all transform hover:-translate-y-1"
-            onClick={handleUpload}
-          >
-            Process {files.length} Document{files.length !== 1 ? 's' : ''}
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCog } from 'react-icons/fa';
 
@@ -6,7 +6,9 @@ const ProcessingPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [status, setStatus] = useState('Initializing...');
-    const { files } = location.state || { files: [] };
+    const { files, question } = location.state || { files: [], question: "" };
+
+    const hasProcessed = useRef(false);
 
     useEffect(() => {
         if (!files || files.length === 0) {
@@ -15,6 +17,10 @@ const ProcessingPage = () => {
             return;
         }
 
+        // Prevent double execution in React StrictMode
+        if (hasProcessed.current) return;
+        hasProcessed.current = true;
+
         const processFiles = async () => {
             setStatus('Uploading and Thinking...');
 
@@ -22,6 +28,7 @@ const ProcessingPage = () => {
             files.forEach((file: File) => {
                 formData.append("pdfFile", file);
             });
+            formData.append("question", question);
 
             try {
                 // Replace with your actual Supabase/Backend Endpoint
@@ -54,7 +61,7 @@ const ProcessingPage = () => {
         };
 
         processFiles();
-    }, [files, navigate]);
+    }, [files, navigate, question]);
 
     return (
         <div className="min-h-screen bg-[#f8f9ff] flex flex-col items-center justify-center font-sans">
