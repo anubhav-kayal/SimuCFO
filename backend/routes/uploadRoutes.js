@@ -32,8 +32,8 @@ const upload = multer({
   },
 });
 
-// POST /upload
-router.post('/upload', upload.single('pdfFile'), handleUpload);
+// POST /upload - support multiple PDF files using field name "pdfFile"
+router.post('/upload', upload.array('pdfFile'), handleUpload);
 
 module.exports = router;
 
