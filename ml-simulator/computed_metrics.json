@@ -1,0 +1,24 @@
+{
+  "revenue_risk_assessment": {
+    "risk_level": "HIGH",
+    "coefficient_of_variation": 0.7484513081981021,
+    "probability_decline": 0.1215,
+    "expected_revenue_range": {
+      "p10": 21302163862.369495,
+      "median": 493958684781.969,
+      "p90": 1111367412261.905
+    }
+  },
+  "cash_risk_assessment": {
+    "risk_level": "HIGH",
+    "probability_negative_cash": 0.2082,
+    "cash_range": {
+      "p5": -219662835344.55942,
+      "median": 90517157230.69543,
+      "p95": 384926863013.4736
+    }
+  },
+  "overall_assessment": {
+    "primary_risk": "cash_liquidity"
+  }
+}
