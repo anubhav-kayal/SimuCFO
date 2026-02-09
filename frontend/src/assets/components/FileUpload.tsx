@@ -1,13 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { FaCloudUploadAlt, FaFilePdf, FaCheckCircle, FaTimesCircle, FaTrash } from 'react-icons/fa';
+import { useState, useRef } from 'react';
+import { FaCloudUploadAlt, FaFilePdf, FaTrash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const FileUpload = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [status, setStatus] = useState<'success' | 'error' | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   // --- LOGIC SECTION ---
   const handleDrag = (e: React.DragEvent) => {
@@ -45,8 +44,6 @@ const FileUpload = () => {
 
     if (validFiles.length > 0) {
       setFiles(prev => [...prev, ...validFiles]);
-      setStatus(null);
-      setUploadProgress(0);
     }
   };
 
@@ -57,49 +54,15 @@ const FileUpload = () => {
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
     if (files.length <= 1) {
-      setStatus(null);
-      setUploadProgress(0);
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (files.length === 0) return;
-    setUploading(true);
 
-    // Fake progress simulation
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) return prev;
-        return prev + 10;
-      });
-    }, 200);
-
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("pdfFile", file);
-    });
-
-    try {
-      // Replace with your actual Supabase/Backend Endpoint
-      const response = await fetch("http://localhost:5000/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        setUploadProgress(100);
-        setStatus('success');
-        setFiles([]); // Clear files on success
-      } else {
-        setStatus('error');
-      }
-    } catch (error) {
-      console.error("Upload failed", error);
-      setStatus('error');
-    } finally {
-      clearInterval(interval);
-      setUploading(false);
-    }
+    // Validate we have files
+    // Navigate to /processing and pass the files in state
+    navigate('/processing', { state: { files: files } });
   };
 
   // --- UI SECTION ---
@@ -143,15 +106,13 @@ const FileUpload = () => {
                   <h4 className="text-gray-800 font-bold truncate text-sm">{file.name}</h4>
                   <p className="text-gray-400 text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
-                {!uploading && (
-                  <button onClick={() => removeFile(index)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                    <FaTrash />
-                  </button>
-                )}
+                <button onClick={() => removeFile(index)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                  <FaTrash />
+                </button>
               </div>
             ))}
 
-            {!uploading && files.length > 0 && (
+            {files.length > 0 && (
               <button
                 className="mt-2 text-sm text-[#8c52ff] font-medium hover:underline flex items-center justify-center gap-2"
                 onClick={onButtonClick}
@@ -175,37 +136,12 @@ const FileUpload = () => {
       {/* Progress & Actions */}
       {files.length > 0 && (
         <div className="mt-6">
-          {(uploading || status === 'success') ? (
-            <div className="w-full">
-              <div className="flex justify-between text-xs font-bold text-gray-400 mb-2">
-                <span>UPLOADING {files.length} FILES...</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[#8c52ff] transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-              {status === 'success' && (
-                <div className="mt-4 flex items-center gap-2 text-green-500 font-bold bg-green-50 p-3 rounded-xl justify-center">
-                  <FaCheckCircle /> Upload Complete
-                </div>
-              )}
-              {status === 'error' && (
-                <div className="mt-4 flex items-center gap-2 text-red-500 font-bold bg-red-50 p-3 rounded-xl justify-center">
-                  <FaTimesCircle /> Upload Failed
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              className="w-full py-4 bg-[#8c52ff] text-white rounded-xl font-bold text-lg shadow-[0_10px_20px_rgba(140,82,255,0.3)] hover:shadow-[0_15px_30px_rgba(140,82,255,0.4)] transition-all transform hover:-translate-y-1"
-              onClick={handleUpload}
-            >
-              Process {files.length} Document{files.length !== 1 ? 's' : ''}
-            </button>
-          )}
+          <button
+            className="w-full py-4 bg-[#8c52ff] text-white rounded-xl font-bold text-lg shadow-[0_10px_20px_rgba(140,82,255,0.3)] hover:shadow-[0_15px_30px_rgba(140,82,255,0.4)] transition-all transform hover:-translate-y-1"
+            onClick={handleUpload}
+          >
+            Process {files.length} Document{files.length !== 1 ? 's' : ''}
+          </button>
         </div>
       )}
     </div>

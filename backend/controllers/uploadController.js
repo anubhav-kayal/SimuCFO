@@ -1,11 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const supabase = require('../config/supabase');
-
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 
 /**
  * Handle one or more PDF uploads and forward them to Supabase storage.
  * After upload, it downloads all PDFs from Supabase to a local 'inputs' folder.
+ * Then it runs the Python processing script synchronously and returns the JSON output.
  */
 exports.handleUpload = async (req, res) => {
   try {
@@ -90,29 +92,56 @@ exports.handleUpload = async (req, res) => {
 
       console.log('All downloads complete.');
 
-      // 3. Run Python Script
+      // 3. Run Python Script Synchronously
       const pythonPath = path.join(__dirname, '../../data-scripts/extractors/venv/bin/python');
       const scriptPath = path.join(__dirname, '../../data-scripts/extractors/pdfProcessor.py');
 
       console.log('Executing Python script...');
-      const { exec } = require('child_process');
-
-      exec(`"${pythonPath}" "${scriptPath}"`, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing script: ${error.message}`);
-          return;
-        }
+      
+      try {
+        const { stdout, stderr } = await exec(`"${pythonPath}" "${scriptPath}"`);
+        
         if (stderr) {
           console.error(`Script stderr: ${stderr}`);
         }
         console.log(`Script stdout: ${stdout}`);
+      } catch (scriptError) {
+        console.error(`Error executing script: ${scriptError.message}`);
+        // Decide if you want to fail the request or continue. 
+        // For now, let's throw to notify frontend of failure.
+        throw new Error(`Script execution failed: ${scriptError.message}`);
+      }
+
+      // 4. Read the generated JSON file
+      const jsonOutputPath = path.join(__dirname, '../../data-scripts/output/template.json');
+      let jsonData = {};
+
+      if (fs.existsSync(jsonOutputPath)) {
+        try {
+            const rawData = fs.readFileSync(jsonOutputPath, 'utf-8');
+            jsonData = JSON.parse(rawData);
+            console.log('Successfully read template.json');
+        } catch (jsonError) {
+            console.error('Error reading/parsing template.json:', jsonError);
+            // Non-fatal, return empty object or partial data
+        }
+      } else {
+          console.warn('template.json not found at:', jsonOutputPath);
+      }
+
+      return res.status(200).send({
+        message: 'Files processed successfully.',
+        files: results,
+        data: jsonData
       });
     }
-
+    
+    // Fallback if listError occurred (though rare)
     return res.status(200).send({
-      message: 'Files uploaded to Supabase successfully. Sync to inputs folder and processing initiated.',
-      files: results,
+        message: 'Files uploaded, but processing skipped due to listing error.',
+        files: results
     });
+
   } catch (error) {
     console.error(error.message);
     return res.status(500).send({ message: error.message });
