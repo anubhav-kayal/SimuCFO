@@ -20,7 +20,11 @@ SCHEMA = json.loads(SCHEMA_PATH.read_text())
 METRIC_NAMES = [m["metric_name"] for m in SCHEMA["metrics"]]
 
 client = BackboardClient(
+<<<<<<< HEAD
     api_key=""   # looks correct
+=======
+    api_key="Api key here"   # looks correct
+>>>>>>> 54ea114be17823402b3b0ae0eff9dc5fd2545a08
 )
 
 
