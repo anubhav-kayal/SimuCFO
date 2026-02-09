@@ -147,10 +147,6 @@ exports.handleUpload = async (req, res) => {
         console.error("❌ Error reading Computed Metrics JSON:", readError);
       }
 
-      res.status(200).json({
-        message: 'Files processed and simulation complete',
-        analysis: analysisResult
-      });
       // montecarlo.py can output 'monte_carlo_analysis.json' (comprehensive) or 'computed_metrics.json' (metrics only)
       const fullAnalysisPath = path.join(mlSimulatorDir, 'monte_carlo_analysis.json');
       const metricsPath = path.join(mlSimulatorDir, 'computed_metrics.json');
@@ -160,14 +156,14 @@ exports.handleUpload = async (req, res) => {
       if (fs.existsSync(fullAnalysisPath)) {
         const fullAnalysis = JSON.parse(fs.readFileSync(fullAnalysisPath, 'utf-8'));
         responseData = {
-          question: question,
+          question: userQuestion,
           answer: fullAnalysis.analysis_results?.computed_answer || {},
           reasoning: fullAnalysis.analysis_results?.llm_explanation || "Analysis completed."
         };
       } else if (fs.existsSync(metricsPath)) {
         const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf-8'));
         responseData = {
-          question: question,
+          question: userQuestion,
           answer: metrics,
           reasoning: "Analysis completed (Metrics only)."
         };
