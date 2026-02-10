@@ -1,4 +1,4 @@
 pandas
 pdfplumber
-backboard
+backboard-sdk
 openpyxl
