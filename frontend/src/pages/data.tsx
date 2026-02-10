@@ -96,93 +96,86 @@ const Data = () => {
                         </button>
                     </div>
 
-                    {/* Main Grid Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Main Layout - Vertical Stack */}
+                    <div className="flex flex-col gap-8">
 
-                        {/* LEFT COLUMN: Question & Interpretation (4 cols) */}
-                        <div className="lg:col-span-4 flex flex-col gap-6">
+                        {/* 1. Target Question (Full Width) */}
+                        <div className="bg-white p-8 rounded-[30px] shadow-[0_10px_40px_rgba(0,0,0,0.05)] border border-purple-50">
+                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Target Question</span>
+                            <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a] leading-relaxed">
+                                "{metricsData?.question || "General Analysis"}"
+                            </h3>
+                        </div>
 
-                            {/* Question Card */}
-                            <div className="bg-white p-8 rounded-[30px] shadow-[0_10px_40px_rgba(0,0,0,0.05)] border border-purple-50">
-                                <span className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Target Question</span>
-                                <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a] leading-relaxed">
-                                    "{metricsData?.question || "General Analysis"}"
-                                </h3>
+                        {/* 2. Probability Distribution (Full Width) */}
+                        {plotImage && (
+                            <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-purple-100 rounded-lg text-[#8c52ff]">
+                                        <FaChartLine />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-gray-800">Probability Distribution</h2>
+                                </div>
+                                <div className="flex justify-center p-4 bg-gray-50 rounded-[20px]">
+                                    <img
+                                        src={plotImage}
+                                        alt="Monte Carlo Bell Curve"
+                                        className="max-w-full h-auto rounded-lg shadow-sm"
+                                        style={{ maxHeight: '500px' }} // Increased max-height for better visibility
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. Computed Metrics (Full Width) */}
+                        <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[30px] border border-white shadow-sm">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-purple-100 rounded-xl text-[#8c52ff]">
+                                    <FaRobot className="text-xl" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-800">Computed Metrics</h2>
                             </div>
 
-                            {/* Interpretation Card (Dark Mode) */}
-                            <div className="bg-[#1a1a1a] text-white p-8 rounded-[30px] shadow-2xl relative overflow-hidden flex-grow min-h-[400px]">
-                                {/* Abstract blob inside */}
-                                <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-[#8c52ff] rounded-full blur-[60px] opacity-60"></div>
-
-                                <div className="relative z-10">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <FaBrain className="text-[#8c52ff] text-2xl" />
-                                        <span className="font-bold text-lg tracking-wide">AI Interpretation</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Expanded to 3 cols usually better for full width */}
+                                {metricsData?.answer && Object.entries(metricsData.answer).map(([key, value]) => (
+                                    <div
+                                        key={key}
+                                        className="bg-white p-6 rounded-[25px] shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#8c52ff]/30 hover:shadow-[0_15px_30px_rgba(140,82,255,0.15)] transition-all duration-300 group"
+                                    >
+                                        <div className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 flex justify-between">
+                                            {formatKey(key)}
+                                            <FaChartLine className="text-gray-300 group-hover:text-[#8c52ff] transition-colors" />
+                                        </div>
+                                        <div className="text-3xl md:text-4xl font-extrabold text-[#1a1a1a] group-hover:text-[#8c52ff] transition-colors break-words">
+                                            {typeof value === 'object' ? renderValue(value) : (
+                                                typeof value === 'number'
+                                                    ? (value % 1 !== 0 ? value.toFixed(2) : value)
+                                                    : String(value)
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="text-gray-300 leading-relaxed text-sm md:text-base font-light whitespace-pre-wrap">
-                                        {interpretation || metricsData?.reasoning || "Reasoning not available."}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: Metrics & Plot (8 cols) */}
-                        <div className="lg:col-span-8 flex flex-col gap-8">
+                        {/* 4. Interpretation Card (Full Width) */}
+                        <div className="bg-[#1a1a1a] text-white p-8 rounded-[30px] shadow-2xl relative overflow-hidden min-h-[300px] mb-20">
+                            {/* Abstract blob inside */}
+                            <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-[#8c52ff] rounded-full blur-[60px] opacity-60"></div>
 
-                            {/* Plot Section */}
-                            {plotImage && (
-                                <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-2 bg-purple-100 rounded-lg text-[#8c52ff]">
-                                            <FaChartLine />
-                                        </div>
-                                        <h2 className="text-xl font-bold text-gray-800">Probability Distribution</h2>
-                                    </div>
-                                    <div className="flex justify-center p-4 bg-gray-50 rounded-[20px]">
-                                        <img
-                                            src={plotImage}
-                                            alt="Monte Carlo Bell Curve"
-                                            className="max-w-full h-auto rounded-lg shadow-sm"
-                                            style={{ maxHeight: '400px' }}
-                                        />
-                                    </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <FaBrain className="text-[#8c52ff] text-2xl" />
+                                    <span className="font-bold text-lg tracking-wide">AI Interpretation</span>
                                 </div>
-                            )}
-
-                            {/* Metrics Grid */}
-                            <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[30px] border border-white shadow-sm">
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="p-3 bg-purple-100 rounded-xl text-[#8c52ff]">
-                                        <FaRobot className="text-xl" />
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-gray-800">Computed Metrics</h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {metricsData?.answer && Object.entries(metricsData.answer).map(([key, value]) => (
-                                        <div
-                                            key={key}
-                                            className="bg-white p-6 rounded-[25px] shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#8c52ff]/30 hover:shadow-[0_15px_30px_rgba(140,82,255,0.15)] transition-all duration-300 group"
-                                        >
-                                            <div className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 flex justify-between">
-                                                {formatKey(key)}
-                                                <FaChartLine className="text-gray-300 group-hover:text-[#8c52ff] transition-colors" />
-                                            </div>
-                                            <div className="text-3xl md:text-4xl font-extrabold text-[#1a1a1a] group-hover:text-[#8c52ff] transition-colors break-words">
-                                                {typeof value === 'object' ? renderValue(value) : (
-                                                    typeof value === 'number'
-                                                        ? (value % 1 !== 0 ? value.toFixed(2) : value)
-                                                        : String(value)
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="text-white leading-relaxed text-sm md:text-base font-medium whitespace-pre-wrap">
+                                    {(interpretation || metricsData?.reasoning || "Reasoning not available.").replace(/[*=]/g, '').trim()}
                                 </div>
                             </div>
-
                         </div>
                     </div>
+
+
                 </div>
             </main>
 
