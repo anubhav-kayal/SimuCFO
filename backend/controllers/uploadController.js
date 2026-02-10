@@ -171,6 +171,20 @@ exports.handleUpload = async (req, res) => {
         throw new Error("No analysis output file found.");
       }
 
+      // 6. Read Plot and Interpretation (Requested by User)
+      const plotPath = path.join(mlSimulatorDir, 'monte_carlo_bell_curve.png');
+      const interpretationPath = path.join(mlSimulatorDir, 'financial_analysis_interpretation.txt');
+
+      if (fs.existsSync(plotPath)) {
+        const plotBase64 = fs.readFileSync(plotPath, 'base64');
+        responseData.plotImage = `data:image/png;base64,${plotBase64}`;
+      }
+
+      if (fs.existsSync(interpretationPath)) {
+        const interpretationText = fs.readFileSync(interpretationPath, 'utf8');
+        responseData.interpretation = interpretationText;
+      }
+
       return res.status(200).send({
         message: 'Analysis completed successfully.',
         files: results,
