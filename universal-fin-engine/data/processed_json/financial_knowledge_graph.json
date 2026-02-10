@@ -1,0 +1,1034 @@
+[
+    {
+        "document_id": "Account 3.xlsx",
+        "status": "Review Required",
+        "ai_metadata": {
+            "bank_name": null,
+            "account_holder": null,
+            "account_number": null,
+            "currency": "INR",
+            "period_start": "2025-03-01",
+            "period_end": "2025-06-30"
+        },
+        "summary": {
+            "total_debit": 123048.0,
+            "total_credit": 0.0,
+            "record_count": 144,
+            "closing_balance": 61.3
+        },
+        "validation_flags": {
+            "balance_continuity": false,
+            "error_count": 18
+        },
+        "transactions": [
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/412824345616/SHOBHA NITIN ZADE /Paymen/YES BANK LIMITED YBS",
+                "debit": 465.0,
+                "credit": 0,
+                "balance": 20728.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/950994619921/Achal Manohar Pada /Paymen/State Bank Of India",
+                "debit": 2500.0,
+                "credit": 0,
+                "balance": 18228.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/837525718938/KHUSHAL PANDURANG ATR/Paymen/YES BANK",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 18198.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/840789288309/ANKITA COLD DRINKS AN/Paymen/BANK OF BARODA",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 18168.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/228503725909/YASH ANIL KAPKAR /Paymen/The Gadchiroli Distr",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 18138.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/524906813165/BSNL Recharge /Paymen/AXIS BANK",
+                "debit": 10.0,
+                "credit": 0,
+                "balance": 18128.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/962715807684/KHUSHAL PANDURANG ATR/Paymen/YES BANK",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 18138.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/579904783973/SAMEER SHAKIR SHEIKH /Paymen/HDFC BANK LTD",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 18078.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/06155253214I/WELLMED SWASTA AUSHAD/Paymen/YES BANK",
+                "debit": 35.0,
+                "credit": 0,
+                "balance": 18043.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/150268203056/SAMEER SHAKIR SHEIKH /Paymen/HDFC BANK LTD",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 17983.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/245458585485/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 17953.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2A/822065182341/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 10000.0,
+                "credit": 0,
+                "balance": 7953.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/763420184616/Master GANESH SADHU H/Paymen/YES BANK LIMITED",
+                "debit": 10.0,
+                "credit": 0,
+                "balance": 7943.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/896882561353/Shyam Lal Ahir /Paymen/YES BANK LIMITED YBS",
+                "debit": 120.0,
+                "credit": 0,
+                "balance": 7823.3
+            },
+            {
+                "date": "01-03-2025",
+                "description": "UPI/P2M/629990291003/BADAL WAMAN KHOBRAGAD/Paymen/YES BANK",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 7793.3
+            },
+            {
+                "date": "02-03-2025",
+                "description": "UPI/P2M/652643393599/-Hotel Ashoka I /Paymen/YES BANK LIMITED YBS",
+                "debit": 150.0,
+                "credit": 0,
+                "balance": 7643.3
+            },
+            {
+                "date": "02-03-2025",
+                "description": "UPI/P2A/409533105715/ROSHAN RAJKUMAR RAUT/Paymen/State Bank Of",
+                "debit": 1670.0,
+                "credit": 0,
+                "balance": 5973.3
+            },
+            {
+                "date": "02-03-2025",
+                "description": "UPI/P2A/7323472I1744/VIKRANT SOMAJI ATALA /Paymen/State Bank Of India",
+                "debit": 270.0,
+                "credit": 0,
+                "balance": 5703.3
+            },
+            {
+                "date": "03-03-2025",
+                "description": "UPI/P2A/730867834693/Achal Manohar Pada /Paymen/State Bank Of India",
+                "debit": 900.0,
+                "credit": 0,
+                "balance": 4803.3
+            },
+            {
+                "date": "04-03-2025",
+                "description": "UPI/P2A/317448652194/ONKAR TANAJI PENDHAR/Paymen/State Bank Of India",
+                "debit": 651.0,
+                "credit": 0,
+                "balance": 4252.3
+            },
+            {
+                "date": "06-03-2025",
+                "description": "UPI/P2M/947842167798/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 212.0,
+                "credit": 0,
+                "balance": 4040.3
+            },
+            {
+                "date": "09-03-2025",
+                "description": "UPI/P2A/130946757573/VIKRANT SOMAJI ATALA /Paymen/State Bank Of India",
+                "debit": 260.0,
+                "credit": 0,
+                "balance": 3780.3
+            },
+            {
+                "date": "09-03-2025",
+                "description": "UPI/P2A/215000829925/WAGHMARE DATTA MAHADH/Paymen/JALNA",
+                "debit": 400.0,
+                "credit": 0,
+                "balance": 3680.3
+            },
+            {
+                "date": "09-03-2025",
+                "description": "UPI/P2M/139644285273/SHALIMAR KIRANA MOHAM/Paymen/AXIS BANK",
+                "debit": 600.0,
+                "credit": 0,
+                "balance": 3080.3
+            },
+            {
+                "date": "09-03-2025",
+                "description": "UPI/P2A/392317438432/SHAIKH MATIN SHAIKH /Paymen/Priyadarshani Nagari",
+                "debit": 300.0,
+                "credit": 0,
+                "balance": 2780.3
+            },
+            {
+                "date": "09-03-2025",
+                "description": "UPI/P2A/486070690170/Nawaj Sayed Matin /Paymen/AIRTEL PAYMENTS",
+                "debit": 80.0,
+                "credit": 0,
+                "balance": 2700.3
+            },
+            {
+                "date": "09-03-2025",
+                "description": "UPI/P2A/674336152817/AMIT DAJU KORAM /Paymen/State Bank Of India",
+                "debit": 150.0,
+                "credit": 0,
+                "balance": 2550.3
+            },
+            {
+                "date": "15-03-2025",
+                "description": "UPI/P2M/364168646731/BSNL Recharge /Paymen/AXIS BANK",
+                "debit": 10.0,
+                "credit": 0,
+                "balance": 6540.3
+            },
+            {
+                "date": "15-03-2025",
+                "description": "UPI/P2M/759491725549/BSNL Recharge /Paymen/AXIS BANK",
+                "debit": 109.0,
+                "credit": 0,
+                "balance": 6441.3
+            },
+            {
+                "date": "15-03-2025",
+                "description": "UPI/P2M/830454771069/BSNL Recharge /Paymen/AXIS BANK",
+                "debit": 10.0,
+                "credit": 0,
+                "balance": 6431.3
+            },
+            {
+                "date": "15-03-2025",
+                "description": "UPI/P2A/342535432860/ANANTA VIJAY BHALTILA/Paymen/State Bank Of India",
+                "debit": 3991.0,
+                "credit": 0,
+                "balance": 2440.3
+            },
+            {
+                "date": "15-03-2025",
+                "description": "UPI/P2A/422494864915/GULSHAN SOHAN KOWE /Paymen/AXIS BANK",
+                "debit": 4000.0,
+                "credit": 0,
+                "balance": 2440.3
+            },
+            {
+                "date": "16-03-2025",
+                "description": "UPI/P2A/083940274962/VIKRANT SOMAJI ATALA /Paymen/State Bank Of India",
+                "debit": 220.0,
+                "credit": 0,
+                "balance": 2220.3
+            },
+            {
+                "date": "16-03-2025",
+                "description": "UPI/P2M/135626386570/SHALIMAR KIRANA MOHAM/Paymen/AXIS BANK",
+                "debit": 200.0,
+                "credit": 0,
+                "balance": 2020.3
+            },
+            {
+                "date": "16-03-2025",
+                "description": "UPI/P2A/499550956618/SHAIKH MATIN SHAIKH /Paymen/Priyadarshani Nagari",
+                "debit": 300.0,
+                "credit": 0,
+                "balance": 1720.3
+            },
+            {
+                "date": "16-03-2025",
+                "description": "UPI/P2A/349501916295/Nawaj Sayed Matin /Paymen/AIRTEL PAYMENTS",
+                "debit": 84.0,
+                "credit": 0,
+                "balance": 1636.3
+            },
+            {
+                "date": "16-03-2025",
+                "description": "UPI/P2M/420022083195/SURAJ LAXMAN BHUREVAL/Paymen/YES BANK LIMITED",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 1576.3
+            },
+            {
+                "date": "16-03-2025",
+                "description": "UPI/P2M/990664785411/Shree Raj Rasvanti /Paymen/AXIS BANK",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 1546.3
+            },
+            {
+                "date": "22-03-2025",
+                "description": "UPI/P2A/231066537777/SURAJ GANIRAM USENDI /Paymen/AXIS BANK",
+                "debit": 300.0,
+                "credit": 0,
+                "balance": 1246.3
+            },
+            {
+                "date": "22-03-2025",
+                "description": "UPI/P2M/622199133498/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 212.0,
+                "credit": 0,
+                "balance": 1034.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2A/948220793377/Wajed Shaikh Rashid /Paymen/State Bank Of India",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 974.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2M/728971117411/SUSHILKUMAR B MEHRA /Paymen/YES BANK LIMITED YBS",
+                "debit": 720.0,
+                "credit": 0,
+                "balance": 254.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2A/645357344636/KACHWANI BEBORAM ARJU/Paymen/UCO BANK",
+                "debit": 200.0,
+                "credit": 0,
+                "balance": 254.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2M/999478788725/MOHAMMDSALI MKHAN /Paymen/YES BANK LIMITED",
+                "debit": 210.0,
+                "credit": 0,
+                "balance": 304.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2M/363761299838/MOHAMMDSALI MKHAN /Paymen/YES BANK LIMITED",
+                "debit": 90.0,
+                "credit": 0,
+                "balance": 214.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2A/520145329554/Nawaj Sayed Matin /Paymen/AIRTEL PAYMENTS",
+                "debit": 74.0,
+                "credit": 0,
+                "balance": 140.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2A/490708753343/BHUSHN KRISHNA GEDAM /Paymen/State Bank Of",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 40.3
+            },
+            {
+                "date": "23-03-2025",
+                "description": "UPI/P2M/848006235635/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 19.0,
+                "credit": 0,
+                "balance": 21.3
+            },
+            {
+                "date": "30-03-2025",
+                "description": "UPI/P2A/772215622452/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 961.3
+            },
+            {
+                "date": "30-03-2025",
+                "description": "UPI/P2A/292037732499/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 900.0,
+                "credit": 0,
+                "balance": 61.3
+            },
+            {
+                "date": "30-03-2025",
+                "description": "UPI/P2A/232751977074/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 300.0,
+                "credit": 0,
+                "balance": 61.3
+            },
+            {
+                "date": "30-03-2025",
+                "description": "UPI/P2A/544639378638/SANTA RAVI SURAKUNDE/Paymen/BANK OF",
+                "debit": 350.0,
+                "credit": 0,
+                "balance": 61.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/959729106446/Shree Raj Rasvanti /Paymen/AXIS BANK",
+                "debit": 20.0,
+                "credit": 0,
+                "balance": 1084.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/686573052430/SUSHILKUMAR B MEHRA /Paymen/YES BANK LIMITED YBS",
+                "debit": 150.0,
+                "credit": 0,
+                "balance": 934.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/987860380551/ZUBER AHEAMD SHER MOH/Paymen/YES BANK",
+                "debit": 70.0,
+                "credit": 0,
+                "balance": 864.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/336692765754/Muzammil Vegetables S/Paymen/AXIS BANK",
+                "debit": 40.0,
+                "credit": 0,
+                "balance": 824.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/I98I66081782/MOHAMMDSALI MKHAN /Paymen/YES BANK LIMITED",
+                "debit": 250.0,
+                "credit": 0,
+                "balance": 574.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2A/540696239488/Nawaj Sayed Matin /Paymen/AIRTEL PAYMENTS",
+                "debit": 46.0,
+                "credit": 0,
+                "balance": 528.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/647269322918/Narayan Statnores /Paymen/AXIS BANK",
+                "debit": 15.0,
+                "credit": 0,
+                "balance": 513.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/737288154919/SHUBHAM KIRANA /Paymen/YES BANK LIMITED",
+                "debit": 40.0,
+                "credit": 0,
+                "balance": 473.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/272260253230/Shree Raj Rasvanti /Paymen/AXIS BANK",
+                "debit": 20.0,
+                "credit": 0,
+                "balance": 453.3
+            },
+            {
+                "date": "06-04-2025",
+                "description": "UPI/P2M/394502221053/UJESH FOODS AND PAN /Paymen/YES BANK LIMITED",
+                "debit": 92.0,
+                "credit": 0,
+                "balance": 361.3
+            },
+            {
+                "date": "07-04-2025",
+                "description": "UPI/P2A/796016939495/BHUSHN KRISHNA GEDAM /Paymen/State Bank Of",
+                "debit": 600.0,
+                "credit": 0,
+                "balance": 31925.3
+            },
+            {
+                "date": "07-04-2025",
+                "description": "UPI/P2A/257392701835/Mr AKASH DEVAJI GURNU/Paymen/BANK OF",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 31425.3
+            },
+            {
+                "date": "07-04-2025",
+                "description": "UPI/P2A/185789127531/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 20000.0,
+                "credit": 0,
+                "balance": 11425.3
+            },
+            {
+                "date": "18-04-2025",
+                "description": "UPI/P2A/531937408840/MUKESH HANUMANT SHIND/Paymen/State Bank",
+                "debit": 3091.0,
+                "credit": 0,
+                "balance": 8334.3
+            },
+            {
+                "date": "20-04-2025",
+                "description": "UPI/P2M/506583905983/RAJKUMAR VISHANDAS VA/Paymen/YES BANK",
+                "debit": 194.0,
+                "credit": 0,
+                "balance": 8140.3
+            },
+            {
+                "date": "24-04-2025",
+                "description": "UPI/P2A/531829355168/SUBHASH MANSARAM TUL/Paymen/State Bank Of",
+                "debit": 2000.0,
+                "credit": 0,
+                "balance": 6140.3
+            },
+            {
+                "date": "25-04-2025",
+                "description": "UPI/P2A/325277915713/Achal Manohar Pada /Paymen/State Bank Of India",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 5640.3
+            },
+            {
+                "date": "29-04-2025",
+                "description": "UPI/P2A/662494053173/KAPIL MOTIRAM KOVA /Paymen/AXIS BANK",
+                "debit": 600.0,
+                "credit": 0,
+                "balance": 5040.3
+            },
+            {
+                "date": "30-04-2025",
+                "description": "UPI/P2A/033345972153/Mr AKASH DEVAJI GURNU/Paymen/BANK OF",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 33330.3
+            },
+            {
+                "date": "02-05-2025",
+                "description": "UPI/P2M/537605214043/BSNL Recharge /Paymen/AXIS BANK",
+                "debit": 109.0,
+                "credit": 0,
+                "balance": 33221.3
+            },
+            {
+                "date": "02-05-2025",
+                "description": "UPI/P2M/769625949057/VIVIDH VASTU BHANDAR /Paymen/SBI PAYMENT",
+                "debit": 96.0,
+                "credit": 0,
+                "balance": 33125.3
+            },
+            {
+                "date": "02-05-2025",
+                "description": "UPI/P2A/712499381766/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 5000.0,
+                "credit": 0,
+                "balance": 28125.3
+            },
+            {
+                "date": "03-05-2025",
+                "description": "UPI/P2M/790451957639/VIVIDH VASTU BHANDAR /Paymen/SBI PAYMENT",
+                "debit": 92.0,
+                "credit": 0,
+                "balance": 28033.3
+            },
+            {
+                "date": "07-05-2025",
+                "description": "UPI/P2A/164520350895/MUKESH HANUMANT SHIND/Paymen/State Bank",
+                "debit": 3860.0,
+                "credit": 0,
+                "balance": 24222.3
+            },
+            {
+                "date": "10-05-2025",
+                "description": "UPI/P2M/004285445695/VIVIDH VASTU BHANDAR /Paymen/SBI PAYMENT",
+                "debit": 117.0,
+                "credit": 0,
+                "balance": 24105.3
+            },
+            {
+                "date": "16-05-2025",
+                "description": "UPI/P2A/095418187612/MUKESH HANUMANT SHIND/Paymen/State Bank",
+                "debit": 975.0,
+                "credit": 0,
+                "balance": 23225.3
+            },
+            {
+                "date": "18-05-2025",
+                "description": "UPI/P2A/285818491415/BHUSHN KRISHNA GEDAM /Paymen/State Bank Of",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 22725.3
+            },
+            {
+                "date": "18-05-2025",
+                "description": "UPI/P2A/526986344982/SACHIN GURUDAS CHUDHA/Paymen/AXIS BANK",
+                "debit": 1020.0,
+                "credit": 0,
+                "balance": 21705.3
+            },
+            {
+                "date": "18-05-2025",
+                "description": "UPI/P2A/916849967857/SACHIN GURUDAS CHUDHA/Paymen/AXIS BANK",
+                "debit": 146.0,
+                "credit": 0,
+                "balance": 21559.3
+            },
+            {
+                "date": "18-05-2025",
+                "description": "UPI/P2M/994465650127/SANJARI PALACE VEG AN/Paymen/YES BANK",
+                "debit": 880.0,
+                "credit": 0,
+                "balance": 20679.3
+            },
+            {
+                "date": "25-05-2025",
+                "description": "UPI/P2A/927979030017/MUKESH HANUMANT SHIND/Paymen/State Bank",
+                "debit": 3800.0,
+                "credit": 0,
+                "balance": 17054.3
+            },
+            {
+                "date": "25-05-2025",
+                "description": "UPI/P2A/343500694881/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 1000.0,
+                "credit": 0,
+                "balance": 16054.3
+            },
+            {
+                "date": "25-05-2025",
+                "description": "UPI/P2M/122627341146/Shree Raj Rasvanti /Paymen/AXIS BANK",
+                "debit": 75.0,
+                "credit": 0,
+                "balance": 15979.3
+            },
+            {
+                "date": "25-05-2025",
+                "description": "UPI/P2A/776744462487/AMAR RAJU KADAM /Paymen/INDIA POST",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 15879.3
+            },
+            {
+                "date": "25-05-2025",
+                "description": "UPI/P2M/9592086I4720/Mr BHAGIRATH CHANDA /Paymen/YES",
+                "debit": 22.0,
+                "credit": 0,
+                "balance": 15857.3
+            },
+            {
+                "date": "29-05-2025",
+                "description": "UPI/P2A/738531153473/Mr RAMESH BARDA PAWAR/Paymen/CENTRAL BANK",
+                "debit": 26.0,
+                "credit": 0,
+                "balance": 15831.3
+            },
+            {
+                "date": "29-05-2025",
+                "description": "UPI/P2A/772789934111/JAGADISH MANSARAM TU/Paymen/State Bank Of",
+                "debit": 4000.0,
+                "credit": 0,
+                "balance": 11831.3
+            },
+            {
+                "date": "30-05-2025",
+                "description": "UPI/P2M/832389915608/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 212.0,
+                "credit": 0,
+                "balance": 11619.3
+            },
+            {
+                "date": "30-05-2025",
+                "description": "UPI/P2A/340340140288/Mr AKASH DEVAJI GURNU/Paymen/BANK OF",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 40159.3
+            },
+            {
+                "date": "30-05-2025",
+                "description": "UPI/P2A/618360074159/GULSHAN SOHAN KOWE /Paymen/AXIS BANK",
+                "debit": 10000.0,
+                "credit": 0,
+                "balance": 30159.3
+            },
+            {
+                "date": "30-05-2025",
+                "description": "UPI/P2M/446479802443/jio Recharge /Paymen/AXIS BANK",
+                "debit": 212.0,
+                "credit": 0,
+                "balance": 29947.3
+            },
+            {
+                "date": "01-06-2025",
+                "description": "UPI/P2A/33735097I360/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 1000.0,
+                "credit": 0,
+                "balance": 28947.3
+            },
+            {
+                "date": "01-06-2025",
+                "description": "ATM-CASH/VISHAL CORNER JAL/JALNA/010625",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 28447.3
+            },
+            {
+                "date": "02-06-2025",
+                "description": "UPI/P2A/381556371950/MUKESH HANUMANT SHIND/Paymen/State Bank",
+                "debit": 3235.0,
+                "credit": 0,
+                "balance": 25212.3
+            },
+            {
+                "date": "03-06-2025",
+                "description": "UPI/P2M/586399114895/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 212.0,
+                "credit": 0,
+                "balance": 25000.3
+            },
+            {
+                "date": "03-06-2025",
+                "description": "UPI/P2A/564866333549/BHUSHN KRISHNA GEDAM /Paymen/State Bank Of",
+                "debit": 400.0,
+                "credit": 0,
+                "balance": 24600.3
+            },
+            {
+                "date": "06-06-2025",
+                "description": "UPI/P2A/356530178383/SHUBHAM KISHAN SHRIBH/Paymen/State Bank Of",
+                "debit": 44.0,
+                "credit": 0,
+                "balance": 24556.3
+            },
+            {
+                "date": "08-06-2025",
+                "description": "UPI/P2A/787611206027/NITESH ASHOK URKUDE /Paymen/AXIS BANK",
+                "debit": 400.0,
+                "credit": 0,
+                "balance": 24156.3
+            },
+            {
+                "date": "08-06-2025",
+                "description": "UPI/P2A/960694361296/MUKESH HANUMANT SHIND/Paymen/State Bank",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 23656.3
+            },
+            {
+                "date": "09-06-2025",
+                "description": "UPI/P2M/433519933015/NILESH BHAGWANRAO RAU/Paymen/YES BANK",
+                "debit": 260.0,
+                "credit": 0,
+                "balance": 23396.3
+            },
+            {
+                "date": "10-06-2025",
+                "description": "UPI/P2A/755483304863/MUSKAN SALIM SAYYAD /Paymen/INDIA POST",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 22896.3
+            },
+            {
+                "date": "10-06-2025",
+                "description": "UPI/P2M/741286068131/NILESH KAWADU NAVGHAR/Paymen/YES BANK",
+                "debit": 25.0,
+                "credit": 0,
+                "balance": 22871.3
+            },
+            {
+                "date": "11-06-2025",
+                "description": "UPI/P2M/425527743862/BharatPe Merchant /Pay to/YesBank_Yespay",
+                "debit": 80.0,
+                "credit": 0,
+                "balance": 22791.3
+            },
+            {
+                "date": "11-06-2025",
+                "description": "UPI/P2M/250277432856/Mr HEMANT AMBADAS RAT/Paymen/YES BANK",
+                "debit": 7.0,
+                "credit": 0,
+                "balance": 22784.3
+            },
+            {
+                "date": "11-06-2025",
+                "description": "UPI/P2M/651509954773/Hemprakash /Paymen/YES BANK LIMITED YBS",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 22724.3
+            },
+            {
+                "date": "11-06-2025",
+                "description": "UPI/P2A/569912894577/WAMAN KESHAV MESHRAM /Paymen/State Bank",
+                "debit": 120.0,
+                "credit": 0,
+                "balance": 22604.3
+            },
+            {
+                "date": "11-06-2025",
+                "description": "UPI/P2A/369845846296/PRASHANT WASUDEO NAR/Paymen/State Bank Of",
+                "debit": 80.0,
+                "credit": 0,
+                "balance": 22524.3
+            },
+            {
+                "date": "11-06-2025",
+                "description": "UPI/P2M/103607887657/SHREE SODA POINT /Paymen/YES BANK LIMITED",
+                "debit": 60.0,
+                "credit": 0,
+                "balance": 22464.3
+            },
+            {
+                "date": "12-06-2025",
+                "description": "UPI/P2A/049240441193/Nikhil Antaram Tulavi/Paymen/State Bank Of India",
+                "debit": 8000.0,
+                "credit": 0,
+                "balance": 14464.3
+            },
+            {
+                "date": "12-06-2025",
+                "description": "UPI/P2M/860038742927/SHOBHA NITIN ZADE /Paymen/YES BANK LIMITED YBS",
+                "debit": 30.0,
+                "credit": 0,
+                "balance": 14434.3
+            },
+            {
+                "date": "12-06-2025",
+                "description": "ATM-CASH/RAJASV SANKUL LIC/GADCHIROLI/I20625",
+                "debit": 1200.0,
+                "credit": 0,
+                "balance": 13234.3
+            },
+            {
+                "date": "12-06-2025",
+                "description": "UPI/P2A/992091600935/Mr ARVIND UMAKANT CHA/Paymen/CENTRAL BANK",
+                "debit": 1500.0,
+                "credit": 0,
+                "balance": 11734.3
+            },
+            {
+                "date": "12-06-2025",
+                "description": "ATM-CASH/RAJASV SANKUL LIC/GADCHIROLI/I20625",
+                "debit": 1200.0,
+                "credit": 0,
+                "balance": 10534.3
+            },
+            {
+                "date": "13-06-2025",
+                "description": "UPI/P2M/130874238481/MR MUNESH PANDURANG K/Paymen/ICICI Bank",
+                "debit": 180.0,
+                "credit": 0,
+                "balance": 10354.3
+            },
+            {
+                "date": "13-06-2025",
+                "description": "UPI/P2M/323033612123/Suyog Narayan Gurnule/Paymen/YES BANK LIMITED YBS",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 10254.3
+            },
+            {
+                "date": "13-06-2025",
+                "description": "UPI/P2M/2058929607I6/SHREE SODA POINT /Paymen/YES BANK LIMITED",
+                "debit": 40.0,
+                "credit": 0,
+                "balance": 10214.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2M/445097444545/Amol Rajndra Dhwale /Paymen/YES BANK LIMITED YBS",
+                "debit": 40.0,
+                "credit": 0,
+                "balance": 10174.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2M/895739000931/Mr RAJENDRA MADHAVR /Paymen/YES BANK LIMITED",
+                "debit": 1350.0,
+                "credit": 0,
+                "balance": 8824.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2M/598457909849/SUBODH AGENCIES PRINT/Paymen/YES BANK",
+                "debit": 90.0,
+                "credit": 0,
+                "balance": 8734.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2M/240023458091/RAHUL MANIKRAO MAHATM/Paymen/YES BANK",
+                "debit": 120.0,
+                "credit": 0,
+                "balance": 8614.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2M/80827430042I/jeet Pan And General/Paymen/AXIS BANK",
+                "debit": 80.0,
+                "credit": 0,
+                "balance": 8534.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2M/074740643179/SHIV KIRANA AND GENE /Paymen/YES BANK LIMITED",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 8434.3
+            },
+            {
+                "date": "14-06-2025",
+                "description": "UPI/P2A/632216318256/SUPRIYA RAVINDRA NAKA/Paymen/The Gadchiroli",
+                "debit": 350.0,
+                "credit": 0,
+                "balance": 8084.3
+            },
+            {
+                "date": "15-06-2025",
+                "description": "UPI/P2A/640649420537/Mr AKASH DEVAJI GURNU/Paymen/BANK OF",
+                "debit": 400.0,
+                "credit": 0,
+                "balance": 7684.3
+            },
+            {
+                "date": "18-06-2025",
+                "description": "UPI/P2M/529183934153/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 302.0,
+                "credit": 0,
+                "balance": 7382.3
+            },
+            {
+                "date": "26-06-2025",
+                "description": "UPI/P2A/641710309698/ARVIND UMAKANT CHAPLE/Paymen/HDFC BANK",
+                "debit": 1000.0,
+                "credit": 0,
+                "balance": 6382.3
+            },
+            {
+                "date": "26-06-2025",
+                "description": "UPI/P2M/020126779396/SATISH MADHUKAR SAROD/Paymen/YES BANK",
+                "debit": 750.0,
+                "credit": 0,
+                "balance": 5632.3
+            },
+            {
+                "date": "26-06-2025",
+                "description": "UPI/P2M/380671610089/Suyog Narayan Gurnule/Paymen/YES BANK LIMITED YBS",
+                "debit": 40.0,
+                "credit": 0,
+                "balance": 5592.3
+            },
+            {
+                "date": "26-06-2025",
+                "description": "ATM-CASH/RAJASV SANKUL LIC/GADCHIROLI/260625",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 5092.3
+            },
+            {
+                "date": "26-06-2025",
+                "description": "UPI/P2M/336292704276/Majisa Bikaner Sweets/Paymen/YES BANK LIMITED YBS",
+                "debit": 720.0,
+                "credit": 0,
+                "balance": 4372.3
+            },
+            {
+                "date": "27-06-2025",
+                "description": "UPI/P2M/933197935838/Jio Recharge /Paymen/AXIS BANK",
+                "debit": 19.0,
+                "credit": 0,
+                "balance": 4353.3
+            },
+            {
+                "date": "27-06-2025",
+                "description": "UPI/P2M/114771099948/Mr JAGADISH MANSARAM/Paymen/AXIS BANK",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 4253.3
+            },
+            {
+                "date": "27-06-2025",
+                "description": "UPI/P2M/514108725595/jio Recharge /Paymen/AXIS BANK",
+                "debit": 302.0,
+                "credit": 0,
+                "balance": 3951.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2A/185774123715/GULSHAN SOHAN KOWE /Paymen/AXIS BANK",
+                "debit": 1000.0,
+                "credit": 0,
+                "balance": 2951.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2M/742444259179/Mr JAGADISH MANSARAM/Paymen/AXIS BANK",
+                "debit": 500.0,
+                "credit": 0,
+                "balance": 2451.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2M/394244167667/RAJESH VALLABHBHAI RA/Paymen/YES BANK",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 2351.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2A/026644346544/MANIRAM KIRANGE /Paymen/State Bank Of India",
+                "debit": 50.0,
+                "credit": 0,
+                "balance": 2301.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2A/373045078696/MANIRAM KIRANGE /Paymen/State Bank Of India",
+                "debit": 35.0,
+                "credit": 0,
+                "balance": 2266.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2M/583170314068/SUBJANALI JIWANI /Paymen/YES BANK LIMITED",
+                "debit": 665.0,
+                "credit": 0,
+                "balance": 1601.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2A/170582423378/PRAMOD MANOHAR GURNUL/Paymen/State Bank",
+                "debit": 40.0,
+                "credit": 0,
+                "balance": 1561.3
+            },
+            {
+                "date": "28-06-2025",
+                "description": "UPI/P2M/036235779467/PRASHANT RAJENDRA TIK/Paymen/YES BANK",
+                "debit": 1400.0,
+                "credit": 0,
+                "balance": 161.3
+            },
+            {
+                "date": "29-06-2025",
+                "description": "UPI/P2M/314319195786/Mr JAGADISH MANSARAM/Paymen/AXIS BANK",
+                "debit": 100.0,
+                "credit": 0,
+                "balance": 61.3
+            }
+        ]
+    }
+]
