@@ -187,12 +187,4 @@ See [`docs/REVIEW_AND_PLAN.md`](docs/REVIEW_AND_PLAN.md) for the full 10-day spr
 
 ---
 
-## Team
 
-Built for **Universal Fin-E 2025 Hackathon** by Anubhav Kayal and team.
-
----
-
-## License
-
-MIT
