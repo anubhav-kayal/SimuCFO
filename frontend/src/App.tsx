@@ -1,18 +1,18 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Navbar from './assets/components/Navbar';
-import Hero from './assets/components/Home';
-import About from './assets/components/about';
-import Service from './assets/components/Service'; // If you made this earlier
-import Pricing from './assets/components/Pricing'; // <--- NEW IMPORT
-import FAQ from './assets/components/FAQ';         // <--- NEW IMPORT
-import ProductPage from './pages/ProductPage';
-import Data from './pages/data';
-import ProcessingPage from './pages/ProcessingPage';
-import Contact from './assets/components/Contact';
-import Footer from './assets/components/Footer';
+import { ThemeProvider } from "./context/ThemeContext";
+import Navbar from "./assets/components/Navbar";
+import Hero from "./assets/components/Home";
+import About from "./assets/components/about";
+import Service from "./assets/components/Service";
+import Pricing from "./assets/components/Pricing";
+import FAQ from "./assets/components/FAQ";
+import Contact from "./assets/components/Contact";
+import Footer from "./assets/components/Footer";
+import ProductPage from "./pages/ProductPage";
+import Data from "./pages/data";
+import ProcessingPage from "./pages/ProcessingPage";
 
-// The Landing Page Combination
 const Home = () => (
   <>
     <Navbar />
@@ -26,17 +26,17 @@ const Home = () => (
   </>
 );
 
-function App() {
+export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/product" element={<ProductPage />} />
-        <Route path="/processing" element={<ProcessingPage />} />
-        <Route path="/data" element={<Data />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/product" element={<ProductPage />} />
+          <Route path="/processing" element={<ProcessingPage />} />
+          <Route path="/data" element={<Data />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
-
-export default App;
