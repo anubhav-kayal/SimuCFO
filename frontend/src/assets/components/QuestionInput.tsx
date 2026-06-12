@@ -1,47 +1,57 @@
-import React from 'react';
-import { FaMagic, FaArrowRight } from 'react-icons/fa';
+import { FaWandMagicSparkles, FaArrowRight, FaRobot } from "react-icons/fa6";
 
-interface QuestionInputProps {
+interface Props {
   question: string;
   setQuestion: (q: string) => void;
   onGenerate: () => void;
 }
 
-const QuestionInput = ({ question, setQuestion, onGenerate }: QuestionInputProps) => {
+const suggestions = [
+  "What is the probability of negative cash next quarter?",
+  "Run a Monte Carlo on revenue growth for FY26",
+  "Analyze margin pressure with 10% cost inflation",
+];
+
+export default function QuestionInput({ question, setQuestion, onGenerate }: Props) {
   return (
-    <div className="w-full bg-white p-8 rounded-[30px] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] h-full flex flex-col">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <FaMagic className="text-[#8c52ff]" />
-          <span className="text-[#8c52ff] font-bold text-sm tracking-wide">AI ANALYSIS</span>
+    <div className="card p-6 flex flex-col h-full">
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <FaWandMagicSparkles className="text-accent text-sm" />
+          <span className="text-xs font-semibold text-accent tracking-wider uppercase">AI Analysis</span>
         </div>
-        <h3 className="text-2xl font-bold text-gray-800">What do you want to know?</h3>
-        <p className="text-gray-400 text-sm mt-1">Ask complex questions about the financial data you uploaded.</p>
+        <h3 className="text-lg font-semibold text-dark-900 dark:text-white">What do you want to know?</h3>
+        <p className="text-sm text-dark-400 dark:text-dark-400 mt-0.5">Ask complex questions about your financial data.</p>
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 flex flex-col">
         <textarea
-          className="w-full h-full min-h-[200px] p-6 bg-gray-50 rounded-2xl border border-gray-200 focus:border-[#8c52ff] focus:ring-2 focus:ring-purple-100 focus:outline-none resize-none text-gray-700 text-lg leading-relaxed placeholder-gray-300 transition-all"
-          placeholder="e.g., Run a Monte Carlo simulation for next quarter's cash flow if we increase marketing spend by 20%..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          placeholder='e.g., "What happens to our cash position if we hire 5 engineers?"'
+          className="input-field min-h-[160px] resize-none flex-1"
+          rows={5}
         />
 
-        {/* Helper Chips */}
-        <div className="absolute bottom-4 left-4 flex gap-2">
-          <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-500 cursor-pointer hover:border-[#8c52ff] hover:text-[#8c52ff] transition-colors">Risk Analysis</span>
-          <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-500 cursor-pointer hover:border-[#8c52ff] hover:text-[#8c52ff] transition-colors">Revenue Forecast</span>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              onClick={() => setQuestion(s)}
+              className="rounded-lg border border-dark-100 bg-dark-50 px-3 py-1.5 text-xs text-dark-500 transition-colors hover:border-accent hover:text-accent dark:border-dark-700 dark:bg-dark-800 dark:text-dark-400 dark:hover:border-accent"
+            >
+              {s}
+            </button>
+          ))}
         </div>
       </div>
 
       <button
         onClick={onGenerate}
-        className="w-full mt-6 py-4 bg-gray-900 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-black transition-all"
+        className="btn-primary mt-5 w-full text-sm"
       >
-        Generate Report <FaArrowRight />
+        <FaRobot /> Generate Analysis <FaArrowRight />
       </button>
     </div>
   );
-};
-
-export default QuestionInput;
+}

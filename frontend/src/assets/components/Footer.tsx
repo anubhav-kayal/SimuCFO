@@ -1,99 +1,77 @@
-import React from 'react';
-import { FaTwitter, FaLinkedin, FaGithub, FaInstagram } from 'react-icons/fa';
+import { Link } from "react-router-dom";
+import { FaXTwitter, FaLinkedin, FaGithub, FaInstagram } from "react-icons/fa6";
 
-const Footer = () => {
-  return (
-    <footer className="bg-[#1a1a1a] text-white pt-20 pb-10 px-[5%] font-sans border-t border-gray-800">
-      
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-        
-        {/* Column 1: Brand & Bio */}
-        <div className="space-y-6">
-          <h2 className="text-3xl font-extrabold tracking-tight">SimuCFO</h2>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-            The AI-powered financial intelligence platform for modern CFOs. 
-            Move beyond static reporting into predictive, data-driven decision making.
-          </p>
-          <div className="flex gap-4">
-            <SocialLink href="#" icon={<FaTwitter />} />
-            <SocialLink href="#" icon={<FaLinkedin />} />
-            <SocialLink href="#" icon={<FaGithub />} />
-            <SocialLink href="#" icon={<FaInstagram />} />
-          </div>
-        </div>
-
-        {/* Column 2: Product */}
-        <div>
-          <h3 className="font-bold text-lg mb-6 text-gray-200">Product</h3>
-          <ul className="space-y-4 text-sm text-gray-400">
-            <li><FooterLink href="#">Features</FooterLink></li>
-            <li><FooterLink href="#">Integrations</FooterLink></li>
-            <li><FooterLink href="#pricing">Pricing</FooterLink></li>
-            {/* <li><FooterLink href="#">Case Studies</FooterLink></li>
-            <li><FooterLink href="#">Reviews</FooterLink></li> */}
-          </ul>
-        </div>
-
-        {/* Column 3: Company */}
-        <div>
-          <h3 className="font-bold text-lg mb-6 text-gray-200">Company</h3>
-          <ul className="space-y-4 text-sm text-gray-400">
-            <li><FooterLink href="#about">About Us</FooterLink></li>
-            {/* <li><FooterLink href="#">Careers</FooterLink></li> */}
-            {/* <li><FooterLink href="#blog">Blog</FooterLink></li> */}
-            <li><FooterLink href="#contact">Contact</FooterLink></li>
-          </ul>
-        </div>
-
-        {/* Column 4: Newsletter */}
-        <div>
-          <h3 className="font-bold text-lg mb-6 text-gray-200">Stay Updated</h3>
-          <p className="text-gray-400 text-sm mb-4">
-            Get the latest financial AI trends delivered to your inbox.
-          </p>
-          <form className="flex flex-col gap-3">
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
-              className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:border-[#8c52ff] text-sm transition-colors"
-            />
-            <button className="px-4 py-3 bg-[#8c52ff] hover:bg-[#7a45e0] text-white font-bold rounded-lg transition-colors text-sm">
-              Subscribe
-            </button>
-          </form>
-        </div>
-
-      </div>
-
-      {/* Bottom Bar */}
-      <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-        <p className="text-gray-500 text-sm">
-          © {new Date().getFullYear()} SimuCFO. All rights reserved.
-        </p>
-        <div className="flex gap-8 text-sm text-gray-500">
-          <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-        </div>
-      </div>
-
-    </footer>
-  );
+const footerLinks = {
+  Product: [
+    { label: "Features", href: "#" },
+    { label: "Pricing", href: "/#pricing" },
+    { label: "Launch App", href: "/product" },
+  ],
+  Company: [
+    { label: "About", href: "/#about" },
+    { label: "Services", href: "/#service" },
+    { label: "Contact", href: "/#contact" },
+  ],
+  Support: [
+    { label: "FAQ", href: "/#faq" },
+    { label: "Documentation", href: "#" },
+    { label: "Status", href: "#" },
+  ],
 };
 
-// Helper Components for clean code
-const SocialLink = ({ href, icon }: { href: string, icon: React.ReactNode }) => (
-  <a 
-    href={href} 
-    className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#8c52ff] hover:text-white transition-all duration-300"
-  >
-    {icon}
-  </a>
-);
+export default function Footer() {
+  return (
+    <footer className="border-t border-dark-100 dark:border-dark-800 bg-white dark:bg-dark-950">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-5">
+          <div className="col-span-2">
+            <Link to="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-xs font-bold text-white">S</span>
+              <span className="text-dark-900 dark:text-white">Simu</span>
+              <span className="gradient-text">CFO</span>
+            </Link>
+            <p className="mt-4 max-w-xs text-sm text-dark-400 dark:text-dark-400 leading-relaxed">
+              AI-powered financial intelligence for modern CFOs. Monte Carlo simulations, anomaly detection, and automated reporting.
+            </p>
+            <div className="mt-6 flex gap-4">
+              {[FaXTwitter, FaLinkedin, FaGithub, FaInstagram].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-dark-200 text-dark-400 transition-colors hover:border-accent hover:text-accent dark:border-dark-700 dark:hover:border-accent"
+                >
+                  <Icon className="text-sm" />
+                </a>
+              ))}
+            </div>
+          </div>
 
-const FooterLink = ({ href, children }: { href: string, children: React.ReactNode }) => (
-  <a href={href} className="hover:text-[#8c52ff] transition-colors">
-    {children}
-  </a>
-);
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h4 className="text-sm font-semibold text-dark-700 dark:text-dark-200 mb-4">{title}</h4>
+              <ul className="space-y-3">
+                {links.map((l) => (
+                  <li key={l.label}>
+                    <Link to={l.href} className="text-sm text-dark-400 transition-colors hover:text-accent dark:text-dark-400 dark:hover:text-accent">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
 
-export default Footer;
+        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-dark-100 pt-8 sm:flex-row dark:border-dark-800">
+          <p className="text-sm text-dark-400 dark:text-dark-500">
+            &copy; {new Date().getFullYear()} SimuCFO. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-dark-400 dark:text-dark-500">
+            <a href="#" className="hover:text-accent transition-colors">Privacy</a>
+            <a href="#" className="hover:text-accent transition-colors">Terms</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

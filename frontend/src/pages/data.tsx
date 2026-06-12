@@ -1,67 +1,79 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Navbar from '../assets/components/Navbar';
-import Footer from '../assets/components/Footer';
-import { FaChartLine, FaArrowLeft, FaRobot, FaBrain } from 'react-icons/fa';
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Navbar from "../assets/components/Navbar";
+import Footer from "../assets/components/Footer";
+import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaTriangleExclamation, FaChartColumn } from "react-icons/fa6";
 
-const Data = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [metricsData, setMetricsData] = useState<any>(null);
-    const [plotImage, setPlotImage] = useState<string | null>(null);
-    const [interpretation, setInterpretation] = useState<string | null>(null);
+function formatKey(k: string) {
+  return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
-    useEffect(() => {
-        if (location.state?.data) {
-            console.log("📊 Received Data:", location.state.data);
+function formatVal(v: unknown): string {
+  if (typeof v === "number") {
+    if (Math.abs(v) >= 1e9) return (v / 1e9).toFixed(2) + "B";
+    if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(2) + "M";
+    if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(2) + "K";
+    return Number.isInteger(v) ? v.toLocaleString() : v.toFixed(2);
+  }
+  return String(v ?? "—");
+}
 
-            // Handle different data structures (analysis wrapper or direct)
-            const analysis = location.state.data.analysis || location.state.data;
-            setMetricsData(analysis);
+function isNumeric(v: unknown): v is number {
+  return typeof v === "number";
+}
 
-            // Set Plot and Interpretation if available
-            if (location.state.data.plotImage) {
-                setPlotImage(location.state.data.plotImage);
-            }
-            if (location.state.data.interpretation) {
-                setInterpretation(location.state.data.interpretation);
-            }
-        }
-    }, [location.state]);
+export default function Data() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [data, setData] = useState<any>(null);
+  const [plot, setPlot] = useState<string | null>(null);
+  const [interpretation, setInterpretation] = useState<string | null>(null);
 
-    // Recursive helper to render JSON objects
-    const renderValue = (value: any) => {
-        if (typeof value === 'object' && value !== null) {
-            return (
-                <div className="pl-4 border-l-2 border-purple-100 mt-2">
-                    {Object.entries(value).map(([subKey, subValue]) => (
-                        <div key={subKey} className="mb-1">
-                            <span className="font-semibold text-gray-700 text-sm">{formatKey(subKey)}: </span>
-                            <span className="text-gray-600 text-sm">{renderValue(subValue)}</span>
-                        </div>
-                    ))}
-                </div>
-            );
-        }
-        // Format numbers nicely
-        if (typeof value === 'number') {
-            if (value > 1000000) return (value / 1000000).toFixed(2) + 'M';
-            if (value > 1000) return (value / 1000).toFixed(2) + 'k';
-            return value.toFixed(2);
-        }
-        return String(value);
-    };
+  useEffect(() => {
+    if (location.state?.data) {
+      const d = location.state.data;
+      setData(d.answer || d.analysis || d);
+      if (d.plotImage) setPlot(d.plotImage);
+      if (d.interpretation) setInterpretation(d.interpretation);
+    }
+  }, [location.state]);
 
-    // Format helper
-    const formatKey = (key: string) => {
-        return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    };
-
-    if (!metricsData && !plotImage) return (
-        <div className="min-h-screen bg-[#f8f9ff] font-sans flex flex-col items-center justify-center">
-            <div className="text-[#8c52ff] text-xl font-bold animate-pulse">Loading Analysis...</div>
+  if (!data && !plot) {
+    return (
+      <div className="min-h-screen bg-dark-50 dark:bg-dark-950 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-accent text-lg font-semibold">
+          <div className="h-5 w-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+          Loading analysis...
         </div>
+      </div>
     );
+  }
+
+  const entries = data ? Object.entries(data).filter(([k]) => k !== "question") : [];
+
+  return (
+    <div className="min-h-screen bg-dark-50 dark:bg-dark-950">
+      <Navbar />
+
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-sm font-medium text-accent dark:bg-accent/10 mb-3">
+              <FaChartColumn /> Analysis Results
+            </div>
+            <h1 className="text-3xl font-extrabold text-dark-900 dark:text-white">
+              Financial <span className="gradient-text">Deep Dive</span>
+            </h1>
+            {data?.question && (
+              <p className="mt-2 text-dark-400 dark:text-dark-400 max-w-xl">
+                &ldquo;{data.question}&rdquo;
+              </p>
+            )}
+          </div>
+          <button onClick={() => navigate("/product")} className="btn-ghost text-sm whitespace-nowrap">
+            <FaArrowLeft /> New Analysis
+          </button>
+        </div>
 
     return (
         <div className="min-h-screen bg-[#f8f9ff] font-sans flex flex-col relative overflow-hidden">
@@ -177,11 +189,13 @@ const Data = () => {
 
 
                 </div>
-            </main>
-
-            <Footer />
+              )}
+            </div>
+          </div>
         </div>
-    );
-};
+      </main>
 
-export default Data;
+      <Footer />
+    </div>
+  );
+}

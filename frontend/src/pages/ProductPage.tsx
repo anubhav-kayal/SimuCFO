@@ -1,88 +1,55 @@
-import React from 'react';
-import Navbar from '../assets/components/Navbar';
-import FileUpload from '../assets/components/FileUpload';
-import QuestionInput from '../assets/components/QuestionInput';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../assets/components/Navbar";
+import FileUpload from "../assets/components/FileUpload";
+import QuestionInput from "../assets/components/QuestionInput";
 
-import { useNavigate } from 'react-router-dom';
-
-const ProductPage = () => {
-  const [question, setQuestion] = React.useState("");
-  const [files, setFiles] = React.useState<File[]>([]);
+export default function ProductPage() {
+  const [question, setQuestion] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const navigate = useNavigate();
 
   const handleGenerate = () => {
-    if (files.length === 0) {
-      alert("Please upload at least one PDF file.");
-      return;
-    }
-    if (!question.trim()) {
-      alert("Please enter a question.");
-      return;
-    }
-    navigate('/processing', { state: { files: files, question: question } });
+    if (!files.length) return alert("Please upload at least one PDF.");
+    if (!question.trim()) return alert("Please enter a question.");
+    navigate("/processing", { state: { files, question } });
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] font-sans relative overflow-x-hidden">
-
-      {/* --- Background Decorative Elements --- */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
-
-      {/* 1. Navbar */}
+    <div className="min-h-screen bg-dark-50 dark:bg-dark-950">
       <Navbar />
 
-      <main className="relative z-10 px-[5%] pb-20 pt-6">
-
-        {/* 2. Page Header (Simplified Text) */}
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <div className="inline-block px-4 py-1.5 mb-4 border border-[#8c52ff] rounded-full text-[#8c52ff] font-bold text-xs tracking-wider bg-white shadow-sm">
-            AI FINANCIAL ANALYST
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+        <div className="mx-auto max-w-2xl text-center mb-12">
+          <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-sm font-medium text-accent dark:bg-accent/10">
+            AI Financial Analyst
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#1a1a1a] mb-6">
-            Start Your <span className="text-[#8c52ff]">Deep Analysis</span>
+          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-dark-900 dark:text-white sm:text-4xl">
+            Start Your <span className="gradient-text">Deep Analysis</span>
           </h1>
-          <p className="text-gray-500 text-lg leading-relaxed max-w-2xl mx-auto">
-            Simply upload your financial reports and ask a question. Our AI will analyze the numbers and give you the answers you need instantly.
+          <p className="mt-3 text-dark-400 dark:text-dark-300">
+            Upload financial reports, ask a question, and get instant Monte Carlo-powered insights.
           </p>
         </div>
 
-        {/* 3. The Workflow Grid (Arrow Removed) */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-
-          {/* --- Step 1: Upload --- */}
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-3 mb-4 pl-2">
-              <div className="w-8 h-8 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center font-bold text-sm">1</div>
-              <span className="font-bold text-gray-700 tracking-wide text-sm">UPLOAD DATA</span>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-xs font-bold text-white">1</span>
+              <span className="text-sm font-semibold text-dark-500 dark:text-dark-300">Upload financial data</span>
             </div>
-            {/* The Component */}
-            <div className="flex-1">
-              <FileUpload files={files} setFiles={setFiles} />
-            </div>
+            <FileUpload files={files} setFiles={setFiles} />
           </div>
 
-          {/* --- Step 2: Analysis --- */}
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-3 mb-4 pl-2">
-              <div className="w-8 h-8 rounded-full bg-[#8c52ff] text-white flex items-center justify-center font-bold text-sm">2</div>
-              <span className="font-bold text-gray-700 tracking-wide text-sm">ASK QUESTION</span>
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-xs font-bold text-white">2</span>
+              <span className="text-sm font-semibold text-dark-500 dark:text-dark-300">Ask your question</span>
             </div>
-            {/* The Component */}
-            <div className="flex-1">
-              <QuestionInput
-                question={question}
-                setQuestion={setQuestion}
-                onGenerate={handleGenerate}
-              />
-            </div>
+            <QuestionInput question={question} setQuestion={setQuestion} onGenerate={handleGenerate} />
           </div>
-
         </div>
       </main>
-
     </div>
   );
-};
-
-export default ProductPage;
+}
