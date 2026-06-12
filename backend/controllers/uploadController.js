@@ -93,7 +93,7 @@ exports.handleUpload = async (req, res) => {
       console.log('All downloads complete.');
 
       // 3. Run Python Script Synchronously (PDF Processor)
-      const pythonPath = path.join(__dirname, '../../data-scripts/extractors/venv/bin/python');
+      const pythonPath = path.join(__dirname, '../../venv/bin/python');
       const scriptPath = path.join(__dirname, '../../data-scripts/extractors/pdfProcessor.py');
 
       console.log('Executing PDF Processor...');
