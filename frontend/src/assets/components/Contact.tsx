@@ -1,148 +1,90 @@
-import React, { useState } from 'react';
-import { FaPaperPlane, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt } from 'react-icons/fa';
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import { FaPaperPlane, FaEnvelope, FaLocationDot, FaPhone } from "react-icons/fa6";
 
-const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
+interface FormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+export default function Contact() {
+  const [form, setForm] = useState<FormData>({ name: "", email: "", subject: "", message: "" });
+
+  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // This is where EmailJS logic will go later
-    console.log("Form Submitted", formData);
-    alert("Message sent! (This is a demo)");
+    console.log("Contact form:", form);
+    alert("Message sent! (Demo)");
   };
 
   return (
-    <section id="contact" className="py-24 px-[5%] bg-[#f8f9ff] font-sans relative overflow-hidden">
-      
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-purple-200 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
-
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        
-        {/* Left Column: Contact Info */}
-        <div className="space-y-8 z-10">
-            <div>
-                <h2 className="text-[#8c52ff] font-bold tracking-widest text-sm uppercase mb-2">GET IN TOUCH</h2>
-                <h2 className="text-4xl md:text-5xl font-extrabold text-[#1a1a1a] tracking-tight mb-6">
-                    Let's Start a Conversation
-                </h2>
-                <p className="text-gray-500 text-lg leading-relaxed max-w-md">
-                    Have questions about our AI models? Need a custom Enterprise plan? Our team is ready to help you transform your financial strategy.
-                </p>
+    <section id="contact" className="py-24 relative overflow-hidden bg-white dark:bg-dark-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-sm font-medium text-accent dark:bg-accent/10 mb-4">
+              Get In Touch
             </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-dark-900 dark:text-white mb-6">
+              Let&apos;s Start a Conversation
+            </h2>
+            <p className="text-dark-400 dark:text-dark-300 text-lg leading-relaxed max-w-md mb-10">
+              Have questions about our AI models? Need a custom Enterprise plan? Our team is ready to help.
+            </p>
 
             <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-[#8c52ff] flex-shrink-0">
-                        <FaEnvelope />
+              {[
+                { icon: FaEnvelope, title: "Email Us", detail: "hello@simucfo.com" },
+                { icon: FaLocationDot, title: "Visit Us", detail: "VIT Vellore, Tamil Nadu, India" },
+                { icon: FaPhone, title: "Call Us", detail: "+91 98765 43210" },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div key={i} className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-dark-100 bg-white text-accent dark:border-dark-700 dark:bg-dark-850">
+                      <Icon />
                     </div>
                     <div>
-                        <h4 className="font-bold text-gray-900">Email Us</h4>
-                        <p className="text-gray-500">hello@simucfo.com</p>
+                      <h4 className="font-semibold text-dark-900 dark:text-white">{item.title}</h4>
+                      <p className="text-sm text-dark-400 dark:text-dark-400">{item.detail}</p>
                     </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-[#8c52ff] flex-shrink-0">
-                        <FaMapMarkerAlt />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-gray-900">Visit Us</h4>
-                        <p className="text-gray-500">VIT Vellore, Tamil Nadu, India</p>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-[#8c52ff] flex-shrink-0">
-                        <FaPhoneAlt />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-gray-900">Call Us</h4>
-                        <p className="text-gray-500">+91 98765 43210</p>
-                    </div>
-                </div>
+                  </div>
+                );
+              })}
             </div>
-        </div>
+          </div>
 
-        {/* Right Column: The Form */}
-        <div className="bg-white p-10 rounded-[30px] shadow-[0_20px_60px_rgba(0,0,0,0.05)] border border-gray-100 z-10">
-            <form onSubmit={handleSubmit} className="space-y-6">
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700 ml-1">Your Name</label>
-                        <input 
-                            type="text" 
-                            name="name"
-                            placeholder="John Doe" 
-                            className="w-full px-6 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#8c52ff] focus:ring-2 focus:ring-purple-100 outline-none transition-all"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700 ml-1">Email Address</label>
-                        <input 
-                            type="email" 
-                            name="email"
-                            placeholder="john@company.com" 
-                            className="w-full px-6 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#8c52ff] focus:ring-2 focus:ring-purple-100 outline-none transition-all"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+          <div className="card p-8">
+            <form onSubmit={onSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="text-xs font-semibold text-dark-500 dark:text-dark-300 ml-1">Your Name</label>
+                  <input type="text" name="name" placeholder="John Doe" className="input-field mt-1" value={form.name} onChange={onChange} required />
                 </div>
-
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 ml-1">Subject</label>
-                    <input 
-                        type="text" 
-                        name="subject"
-                        placeholder="Enterprise Inquiry..." 
-                        className="w-full px-6 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#8c52ff] focus:ring-2 focus:ring-purple-100 outline-none transition-all"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                    />
+                <div>
+                  <label className="text-xs font-semibold text-dark-500 dark:text-dark-300 ml-1">Email</label>
+                  <input type="email" name="email" placeholder="john@company.com" className="input-field mt-1" value={form.email} onChange={onChange} required />
                 </div>
-
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 ml-1">Message</label>
-                    <textarea 
-                        name="message"
-                        placeholder="Tell us about your project..." 
-                        rows={4}
-                        className="w-full px-6 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#8c52ff] focus:ring-2 focus:ring-purple-100 outline-none transition-all resize-none"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                    ></textarea>
-                </div>
-
-                <button 
-                    type="submit" 
-                    className="w-full py-4 bg-[#8c52ff] text-white font-bold rounded-xl shadow-[0_10px_20px_rgba(140,82,255,0.3)] hover:shadow-[0_15px_30px_rgba(140,82,255,0.4)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
-                    Send Message <FaPaperPlane />
-                </button>
-
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-dark-500 dark:text-dark-300 ml-1">Subject</label>
+                <input type="text" name="subject" placeholder="Enterprise Inquiry..." className="input-field mt-1" value={form.subject} onChange={onChange} required />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-dark-500 dark:text-dark-300 ml-1">Message</label>
+                <textarea name="message" rows={4} placeholder="Tell us about your project..." className="input-field mt-1 resize-none" value={form.message} onChange={onChange} required />
+              </div>
+              <button type="submit" className="btn-primary w-full">
+                <FaPaperPlane /> Send Message
+              </button>
             </form>
+          </div>
         </div>
-
       </div>
     </section>
   );
-};
-
-export default Contact;
+}
