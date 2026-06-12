@@ -16,7 +16,7 @@ from typing import Dict, List, Tuple, Optional
 # CONFIGURATION
 # =====================================================
 
-CSV_PATH = "./monte_carlo_final_data 2.csv"
+CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data-scripts", "output", "monte_carlo_final_data.csv")
 NUM_SIMULATIONS = 10000
 np.random.seed(42)
 
