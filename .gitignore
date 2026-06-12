@@ -70,3 +70,8 @@ ENV/
 *.temp
 .cache/
 *.pdf
+
+# =========================
+# Internal docs (not for commit)
+# =========================
+docs/REVIEW_AND_PLAN.md
