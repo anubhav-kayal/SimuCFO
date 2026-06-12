@@ -75,99 +75,119 @@ export default function Data() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-          <div className="lg:col-span-2 space-y-6">
-            {interpretation && (
-              <div className="card p-6 relative overflow-hidden">
-                <div className="absolute top-[-60px] right-[-60px] h-32 w-32 rounded-full bg-accent/10 blur-[60px]" />
-                <div className="relative">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FaBrain className="text-accent" />
-                    <h2 className="text-sm font-bold text-dark-700 dark:text-dark-200 uppercase tracking-wider">AI Interpretation</h2>
-                  </div>
-                  <div className="text-sm text-dark-500 dark:text-dark-300 leading-relaxed whitespace-pre-wrap">
-                    {interpretation}
-                  </div>
-                </div>
-              </div>
-            )}
+    return (
+        <div className="min-h-screen bg-[#f8f9ff] font-sans flex flex-col relative overflow-hidden">
+            {/* --- Background Elements --- */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200 rounded-full blur-[120px] opacity-30 pointer-events-none"></div>
+            <div className="absolute bottom-0 right-0 w-[35%] h-[50%] bg-[#8c52ff] rounded-tl-[150px] z-0 pointer-events-none opacity-10"></div>
 
-            {plot && (
-              <div className="card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <FaChartLine className="text-accent" />
-                  <h2 className="text-sm font-bold text-dark-700 dark:text-dark-200 uppercase tracking-wider">Probability Distribution</h2>
-                </div>
-                <img src={plot} alt="Monte Carlo distribution" className="w-full rounded-xl bg-dark-50 dark:bg-dark-900" />
-              </div>
-            )}
-          </div>
+            <Navbar />
 
-          <div className="lg:col-span-3">
-            <div className="card p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <FaRobot className="text-accent" />
-                <h2 className="text-sm font-bold text-dark-700 dark:text-dark-200 uppercase tracking-wider">Computed Metrics</h2>
-              </div>
+            <main className="flex-grow px-[5%] py-8 relative z-10">
+                <div className="max-w-7xl mx-auto">
 
-              {entries.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-dark-400 dark:text-dark-500">
-                  <FaTriangleExclamation className="text-3xl mb-3" />
-                  <p className="text-sm">No computed metrics available.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {entries.map(([key, value]) => {
-                    const numeric = isNumeric(value);
-                    const isRisk = key.toLowerCase().includes("risk") || key.toLowerCase().includes("level");
-                    const isProb = key.toLowerCase().includes("probabilit") || key.toLowerCase().includes("chance");
-
-                    let badge = "";
-                    if (isRisk && typeof value === "string") {
-                      badge = value.toUpperCase();
-                    }
-
-                    return (
-                      <div key={key} className="card-hover p-5">
-                        <div className="flex items-start justify-between mb-2">
-                          <span className="text-xs font-semibold text-dark-400 dark:text-dark-400 uppercase tracking-wider">{formatKey(key)}</span>
-                          {badge && (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              badge === "HIGH" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" :
-                              badge === "MEDIUM" ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" :
-                              badge === "LOW" ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                              "bg-dark-100 text-dark-500 dark:bg-dark-800 dark:text-dark-400"
-                            }`}>{badge}</span>
-                          )}
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <div className="inline-block px-4 py-1.5 mb-4 border border-[#8c52ff] rounded-full text-[#8c52ff] font-semibold text-sm tracking-wide bg-white shadow-sm">
+                                🚀 AI ANALYSIS RESULT
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-[#1a1a1a]">
+                                Financial <span className="text-[#8c52ff]">Deep Dive</span>
+                            </h1>
+                            <p className="text-gray-500 mt-4 text-lg max-w-2xl">
+                                Insights extracted from your Monte Carlo simulation.
+                            </p>
                         </div>
 
-                        {typeof value === "object" && value !== null ? (
-                          <div className="space-y-1.5">
-                            {Object.entries(value as Record<string, unknown>).map(([sk, sv]) => (
-                              <div key={sk} className="flex items-center justify-between text-sm">
-                                <span className="text-dark-400 dark:text-dark-400">{formatKey(sk)}</span>
-                                <span className={`font-semibold ${
-                                  isProb ? (
-                                    isNumeric(sv) && sv > 0.5 ? "text-red-500" :
-                                    isNumeric(sv) && sv > 0.2 ? "text-amber-500" : "text-emerald-500"
-                                  ) : "text-dark-900 dark:text-white"
-                                }`}>{formatVal(sv)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className={`text-2xl font-extrabold ${
-                            isProb && numeric ? (
-                              value > 0.5 ? "text-red-500" :
-                              value > 0.2 ? "text-amber-500" : "text-emerald-500"
-                            ) : numeric ? "text-dark-900 dark:text-white" : "text-dark-900 dark:text-white"
-                          }`}>
-                            {isProb && numeric ? (Number(value) * 100).toFixed(1) + "%" : formatVal(value)}
-                          </div>
+                        <button
+                            onClick={() => navigate('/product')}
+                            className="bg-white border-2 border-[#8c52ff] text-[#8c52ff] px-8 py-3 rounded-full font-bold text-lg hover:bg-purple-50 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                        >
+                            <FaArrowLeft /> New Scan
+                        </button>
+                    </div>
+
+                    {/* Main Layout - Vertical Stack */}
+                    <div className="flex flex-col gap-8">
+
+                        {/* 1. Target Question (Full Width) */}
+                        <div className="bg-white p-8 rounded-[30px] shadow-[0_10px_40px_rgba(0,0,0,0.05)] border border-purple-50">
+                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Target Question</span>
+                            <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a] leading-relaxed">
+                                "{metricsData?.question || "General Analysis"}"
+                            </h3>
+                        </div>
+
+                        {/* 2. Probability Distribution (Full Width) */}
+                        {plotImage && (
+                            <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-purple-100 rounded-lg text-[#8c52ff]">
+                                        <FaChartLine />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-gray-800">Probability Distribution</h2>
+                                </div>
+                                <div className="flex justify-center p-4 bg-gray-50 rounded-[20px]">
+                                    <img
+                                        src={plotImage}
+                                        alt="Monte Carlo Bell Curve"
+                                        className="max-w-full h-auto rounded-lg shadow-sm"
+                                        style={{ maxHeight: '500px' }} // Increased max-height for better visibility
+                                    />
+                                </div>
+                            </div>
                         )}
-                      </div>
-                    );
-                  })}
+
+                        {/* 3. Computed Metrics (Full Width) */}
+                        <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[30px] border border-white shadow-sm">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-purple-100 rounded-xl text-[#8c52ff]">
+                                    <FaRobot className="text-xl" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-800">Computed Metrics</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Expanded to 3 cols usually better for full width */}
+                                {metricsData?.answer && Object.entries(metricsData.answer).map(([key, value]) => (
+                                    <div
+                                        key={key}
+                                        className="bg-white p-6 rounded-[25px] shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#8c52ff]/30 hover:shadow-[0_15px_30px_rgba(140,82,255,0.15)] transition-all duration-300 group"
+                                    >
+                                        <div className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 flex justify-between">
+                                            {formatKey(key)}
+                                            <FaChartLine className="text-gray-300 group-hover:text-[#8c52ff] transition-colors" />
+                                        </div>
+                                        <div className="text-3xl md:text-4xl font-extrabold text-[#1a1a1a] group-hover:text-[#8c52ff] transition-colors break-words">
+                                            {typeof value === 'object' ? renderValue(value) : (
+                                                typeof value === 'number'
+                                                    ? (value % 1 !== 0 ? value.toFixed(2) : value)
+                                                    : String(value)
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 4. Interpretation Card (Full Width) */}
+                        <div className="bg-[#1a1a1a] text-white p-8 rounded-[30px] shadow-2xl relative overflow-hidden min-h-[300px] mb-20">
+                            {/* Abstract blob inside */}
+                            <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-[#8c52ff] rounded-full blur-[60px] opacity-60"></div>
+
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <FaBrain className="text-[#8c52ff] text-2xl" />
+                                    <span className="font-bold text-lg tracking-wide">AI Interpretation</span>
+                                </div>
+                                <div className="text-white leading-relaxed text-sm md:text-base font-medium whitespace-pre-wrap">
+                                    {(interpretation || metricsData?.reasoning || "Reasoning not available.").replace(/[*=]/g, '').trim()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
                 </div>
               )}
             </div>
