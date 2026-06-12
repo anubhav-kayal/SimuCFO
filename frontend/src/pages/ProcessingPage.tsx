@@ -1,107 +1,115 @@
-import { useEffect, useState, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCog } from 'react-icons/fa';
+import { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { FaFilePdf, FaRobot, FaChartLine, FaCircleCheck, FaSpinner } from "react-icons/fa6";
 
-const ProcessingPage = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [status, setStatus] = useState('Initializing...');
-    const { files, question } = location.state || { files: [], question: "" };
+const STEPS = [
+  { icon: FaFilePdf, label: "Uploading documents" },
+  { icon: FaRobot, label: "Extracting financial data" },
+  { icon: FaChartLine, label: "Running Monte Carlo" },
+  { icon: FaCircleCheck, label: "Generating report" },
+];
 
-    const hasProcessed = useRef(false);
+export default function ProcessingPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+  const [status, setStatus] = useState("Initializing...");
+  const { files, question } = location.state || { files: [], question: "" };
+  const hasProcessed = useRef(false);
 
-    useEffect(() => {
-        if (!files || files.length === 0) {
-            // If no files, redirect back to upload page
-            navigate('/'); // Or wherever the upload page is
-            return;
+  useEffect(() => {
+    if (!files?.length) {
+      navigate("/product", { replace: true });
+      return;
+    }
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    const progress = setInterval(() => {
+      setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    }, 2500);
+
+    const process = async () => {
+      setStatus("Uploading documents...");
+      const formData = new FormData();
+      files.forEach((f: File) => formData.append("pdfFile", f));
+      formData.append("question", question);
+
+      try {
+        const res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData });
+        clearInterval(progress);
+        setStep(STEPS.length - 1);
+
+        if (res.ok) {
+          const json = await res.json();
+          setStatus("Complete!");
+          setTimeout(() => navigate("/data", { state: { data: json.data } }), 800);
+        } else {
+          setStatus("Analysis failed. Redirecting...");
+          setTimeout(() => navigate("/product", { replace: true }), 2500);
         }
+      } catch {
+        clearInterval(progress);
+        setStatus("Connection error. Redirecting...");
+        setTimeout(() => navigate("/product", { replace: true }), 2500);
+      }
+    };
 
-        // Prevent double execution in React StrictMode
-        if (hasProcessed.current) return;
-        hasProcessed.current = true;
+    process();
+  }, [files, navigate, question]);
 
-        const processFiles = async () => {
-            setStatus('Uploading and Thinking...');
-
-            const formData = new FormData();
-            files.forEach((file: File) => {
-                formData.append("pdfFile", file);
-            });
-            formData.append("question", question);
-
-            try {
-                // Replace with your actual Supabase/Backend Endpoint
-                const response = await fetch("http://localhost:5000/upload", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    const serverData = responseData.data;
-
-                    setStatus('Complete!');
-                    // Short delay to show completion state before redirect
-                    setTimeout(() => {
-                        navigate('/data', { state: { data: serverData } });
-                    }, 1000);
-
-                } else {
-                    setStatus('Error processing files.');
-                    console.error("Upload failed");
-                    // Handle error (maybe redirect back or show error button)
-                    setTimeout(() => navigate('/'), 3000);
-                }
-            } catch (error) {
-                setStatus('Network Error');
-                console.error("Upload failed", error);
-                setTimeout(() => navigate('/'), 3000);
-            }
-        };
-
-        processFiles();
-    }, [files, navigate, question]);
-
-    return (
-        <div className="min-h-screen bg-[#f8f9ff] flex flex-col items-center justify-center font-sans">
-            <div className="bg-white p-12 rounded-[30px] shadow-[0_20px_60px_rgba(0,0,0,0.08)] text-center max-w-md w-full">
-
-                <div className="mb-8 relative flex justify-center">
-                    <div className="absolute inset-0 bg-purple-100 rounded-full blur-xl opacity-50 animate-pulse"></div>
-                    <FaCog className="text-6xl text-[#8c52ff] animate-spin relative z-10" />
-                </div>
-
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Processing Data</h2>
-
-                <p className="text-gray-500 mb-8 text-lg">
-                    Please wait while our AI analyzes your financial documents...
-                </p>
-
-                <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                    <div className="h-full bg-[#8c52ff] animate-progress origin-left w-full"></div>
-                </div>
-
-                <p className="mt-4 text-sm font-semibold text-[#8c52ff]">
-                    {status}
-                </p>
-
+  return (
+    <div className="min-h-screen bg-dark-50 dark:bg-dark-950 flex items-center justify-center px-4">
+      <div className="w-full max-w-lg">
+        <div className="card p-8 text-center">
+          <div className="relative mx-auto mb-8 flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-accent/10 animate-ping" />
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
+              <FaSpinner className="text-3xl text-accent animate-spin" />
             </div>
+          </div>
 
-            {/* CSS Animation defined inline for simplicity, or add to index.css */}
-            <style>{`
-        @keyframes progress {
-          0% { transform: scaleX(0); }
-          50% { transform: scaleX(0.7); }
-          100% { transform: scaleX(1); }
-        }
-        .animate-progress {
-            animation: progress 2s infinite ease-in-out;
-            transform-origin: left;
-        }
-      `}</style>
+          <h2 className="text-2xl font-bold text-dark-900 dark:text-white mb-2">Processing Your Analysis</h2>
+          <p className="text-sm text-dark-400 dark:text-dark-400 mb-10 max-w-sm mx-auto">
+            Our AI engine is extracting metrics, running simulations, and preparing your report.
+          </p>
+
+          <div className="space-y-4 text-left">
+            {STEPS.map((s, i) => {
+              const active = i === step;
+              const done = i < step;
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className={`flex items-center gap-4 rounded-xl border p-4 transition-all duration-500 ${
+                  active
+                    ? "border-accent/30 bg-accent/5 dark:bg-accent/10"
+                    : done
+                    ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800/40 dark:bg-emerald-900/10"
+                    : "border-dark-100 dark:border-dark-800 opacity-40"
+                }`}>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm transition-all ${
+                    done
+                      ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      : active
+                      ? "bg-accent/10 text-accent"
+                      : "bg-dark-100 text-dark-400 dark:bg-dark-800 dark:text-dark-500"
+                  }`}>
+                    {done ? <FaCircleCheck /> : active ? <FaSpinner className="animate-spin" /> : <Icon />}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold ${
+                      done ? "text-emerald-700 dark:text-emerald-400" : active ? "text-accent" : "text-dark-500 dark:text-dark-400"
+                    }`}>{s.label}</p>
+                    <p className="text-xs text-dark-400 dark:text-dark-500">
+                      {done ? "Completed" : active ? status : "Waiting"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-    );
-};
-
-export default ProcessingPage;
+      </div>
+    </div>
+  );
+}

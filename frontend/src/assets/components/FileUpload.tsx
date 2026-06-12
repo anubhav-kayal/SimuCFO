@@ -1,130 +1,103 @@
-import { useState, useRef } from 'react';
-import { FaCloudUploadAlt, FaFilePdf, FaTrash } from 'react-icons/fa';
-interface FileUploadProps {
+import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
+import { FaCloudArrowUp, FaFilePdf, FaXmark, FaCircleCheck } from "react-icons/fa6";
+
+interface Props {
   files: File[];
   setFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
-const FileUpload = ({ files, setFiles }: FileUploadProps) => {
-  const [dragActive, setDragActive] = useState(false);
+export default function FileUpload({ files, setFiles }: Props) {
+  const [drag, setDrag] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // --- LOGIC SECTION ---
-  const handleDrag = (e: React.DragEvent) => {
+  const onDrag = (e: DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDrag(true);
+    else if (e.type === "dragleave") setDrag(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const onDrop = (e: DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      validateAndAddFiles(Array.from(e.dataTransfer.files));
+    setDrag(false);
+    if (e.dataTransfer.files?.length) addFiles(Array.from(e.dataTransfer.files));
+  };
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) addFiles(Array.from(e.target.files));
+  };
+
+  const addFiles = (incoming: File[]) => {
+    const valid = incoming.filter((f) => f.type === "application/pdf");
+    if (valid.length !== incoming.length) {
+      alert("Only PDF files are accepted.");
     }
+    if (valid.length) setFiles((prev) => [...prev, ...valid]);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    if (e.target.files && e.target.files.length > 0) {
-      validateAndAddFiles(Array.from(e.target.files));
-    }
-  };
+  const remove = (i: number) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
 
-  const validateAndAddFiles = (selectedFiles: File[]) => {
-    const validFiles = selectedFiles.filter(file => file.type === "application/pdf");
-
-    if (validFiles.length !== selectedFiles.length) {
-      alert("Some files were skipped because they are not PDFs.");
-    }
-
-    if (validFiles.length > 0) {
-      setFiles(prev => [...prev, ...validFiles]);
-    }
-  };
-
-  const onButtonClick = () => {
-    inputRef.current?.click();
-  };
-
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // --- UI SECTION ---
   return (
-    <div className="w-full bg-white p-8 rounded-[30px] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold text-gray-800">Financial Data Source</h3>
-        <p className="text-gray-400 text-sm mt-1">Upload your balance sheet or cash flow statement (PDF only, Max 5MB)</p>
+    <div className="card p-6">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Financial Documents</h3>
+        <p className="text-sm text-dark-400 dark:text-dark-400 mt-0.5">Upload balance sheets, P&L, or cash flow PDFs</p>
       </div>
 
       <div
-        className={`relative w-full min-h-[16rem] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${dragActive ? "border-[#8c52ff] bg-purple-50" : "border-gray-200 bg-gray-50"
-          } ${files.length > 0 ? "bg-white border-solid border-gray-200" : ""}`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
+        onDragEnter={onDrag}
+        onDragLeave={onDrag}
+        onDragOver={onDrag}
+        onDrop={onDrop}
+        className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all ${
+          drag
+            ? "border-accent bg-accent/5"
+            : files.length > 0
+            ? "border-dark-200 dark:border-dark-600 bg-dark-50 dark:bg-dark-800/50"
+            : "border-dark-200 dark:border-dark-700 bg-dark-50 dark:bg-dark-800/30"
+        }`}
       >
         {files.length === 0 ? (
           <>
-            <div className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center mb-4 text-[#8c52ff] text-2xl">
-              <FaCloudUploadAlt />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent mb-4">
+              <FaCloudArrowUp className="text-2xl" />
             </div>
-            <p className="text-gray-500 font-medium">Drag & drop your PDF files here</p>
-            <span className="text-gray-300 text-sm my-2">- OR -</span>
-            <button
-              className="text-[#8c52ff] font-bold hover:underline"
-              onClick={onButtonClick}
-            >
-              Browse Files
+            <p className="text-sm font-medium text-dark-500 dark:text-dark-300">Drag & drop PDFs here</p>
+            <span className="text-xs text-dark-400 my-2">or</span>
+            <button onClick={() => inputRef.current?.click()} className="text-sm font-semibold text-accent hover:underline">
+              Browse files
             </button>
           </>
         ) : (
-          <div className="w-full px-6 py-4 grid gap-4">
-            {files.map((file, index) => (
-              <div key={`${file.name}-${index}`} className="flex items-center gap-4 w-full bg-gray-50 p-3 rounded-xl border border-gray-100">
-                <div className="w-12 h-12 bg-red-50 rounded-lg flex-shrink-0 flex items-center justify-center text-red-500 text-xl">
+          <div className="w-full space-y-3">
+            {files.map((f, i) => (
+              <div key={`${f.name}-${i}`} className="flex items-center gap-3 rounded-xl border border-dark-100 bg-white p-3 dark:border-dark-700 dark:bg-dark-850">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-500 dark:bg-red-500/10">
                   <FaFilePdf />
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <h4 className="text-gray-800 font-bold truncate text-sm">{file.name}</h4>
-                  <p className="text-gray-400 text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-dark-900 dark:text-white">{f.name}</p>
+                  <p className="text-xs text-dark-400">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
-                <button onClick={() => removeFile(index)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                  <FaTrash />
+                <button onClick={() => remove(i)} className="flex h-8 w-8 items-center justify-center rounded-lg text-dark-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-colors">
+                  <FaXmark />
                 </button>
               </div>
             ))}
-
-            {files.length > 0 && (
-              <button
-                className="mt-2 text-sm text-[#8c52ff] font-medium hover:underline flex items-center justify-center gap-2"
-                onClick={onButtonClick}
-              >
-                <FaCloudUploadAlt /> Add More Files
-              </button>
-            )}
+            <button onClick={() => inputRef.current?.click()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-dark-200 p-3 text-sm text-dark-400 hover:border-accent hover:text-accent transition-colors dark:border-dark-600">
+              <FaCloudArrowUp /> Add more files
+            </button>
           </div>
         )}
 
-        <input
-          ref={inputRef}
-          type="file"
-          className="hidden"
-          accept=".pdf"
-          multiple
-          onChange={handleChange}
-        />
+        <input ref={inputRef} type="file" className="hidden" accept=".pdf" multiple onChange={onChange} />
       </div>
+
+      {files.length > 0 && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+          <FaCircleCheck className="text-xs" />
+          <span>{files.length} file{files.length !== 1 ? "s" : ""} ready</span>
+        </div>
+      )}
     </div>
   );
-};
-
-export default FileUpload;
+}
