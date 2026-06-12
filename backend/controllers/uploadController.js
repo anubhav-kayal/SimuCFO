@@ -3,26 +3,50 @@ const path = require('path');
 const supabase = require('../config/supabase');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
+const { rm } = require('fs/promises');
 
-/**
- * Handle one or more PDF uploads and forward them to Supabase storage.
- * After upload, it downloads all PDFs from Supabase to a local 'inputs' folder.
- * Then it runs the Python processing script synchronously and returns the JSON output.
- */
+const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
+const INPUTS_DIR = path.join(__dirname, '..', '..', 'data-scripts', 'inputs');
+const VENV_PYTHON = path.join(__dirname, '..', '..', 'venv', 'bin', 'python');
+const PDF_SCRIPT = path.join(__dirname, '..', '..', 'data-scripts', 'extractors', 'pdfProcessor.py');
+const MC_SCRIPT = path.join(__dirname, '..', '..', 'ml-simulator', 'montecarlo.py');
+const MC_OUTPUT_DIR = path.join(__dirname, '..', '..', 'ml-simulator');
+
+const EXEC_TIMEOUT_MS = 300_000;
+
+function readJsonIfExists(filePath) {
+  if (fs.existsSync(filePath)) {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  }
+  return null;
+}
+
+async function runPythonScript(scriptPath, args = [], options = {}) {
+  const quotedArgs = args.map(a => `"${a.replace(/"/g, '\\"')}"`).join(' ');
+  const command = `"${VENV_PYTHON}" "${scriptPath}" ${quotedArgs}`;
+  const { stdout, stderr } = await exec(command, {
+    timeout: EXEC_TIMEOUT_MS,
+    ...options,
+  });
+  if (stderr) {
+    console.warn(`[${path.basename(scriptPath)}] stderr:`, stderr);
+  }
+  return stdout;
+}
+
 exports.handleUpload = async (req, res) => {
   try {
     const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
 
     if (!files.length) {
-      return res.status(400).send({ message: 'No file uploaded' });
+      return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const results = [];
+    const uploadedFiles = [];
 
     // 1. Upload files to Supabase
     for (const file of files) {
-      const filePath = file.path;
-      const fileContent = fs.readFileSync(filePath);
+      const fileContent = fs.readFileSync(file.path);
 
       const { data, error } = await supabase.storage
         .from('pdfs')
@@ -39,7 +63,7 @@ exports.handleUpload = async (req, res) => {
         .from('pdfs')
         .getPublicUrl(data.path);
 
-      results.push({
+      uploadedFiles.push({
         originalName: file.originalname,
         storedName: file.filename,
         supabasePath: data.path,
@@ -47,161 +71,96 @@ exports.handleUpload = async (req, res) => {
       });
     }
 
-    // 2. List and Download ALL files from Supabase 'pdfs' bucket to 'inputs' folder
-    console.log('Fetching all files from Supabase pdfs bucket...');
-
-    const { data: fileList, error: listError } = await supabase
-      .storage
+    // 2. Download all PDFs from Supabase to inputs folder
+    const { data: fileList, error: listError } = await supabase.storage
       .from('pdfs')
       .list();
 
     if (listError) {
-      console.error('Error listing files from Supabase:', listError);
-      // We don't fail the request if listing fails, but we log it.
-    } else {
-      console.log(`Found ${fileList.length} files in Supabase. Downloading to inputs/ folder...`);
-
-      const inputsDir = path.join(__dirname, '../../data-scripts', 'inputs');
-      if (!fs.existsSync(inputsDir)) {
-        fs.mkdirSync(inputsDir, { recursive: true });
-      }
-
-      const downloadResults = [];
-
-      for (const file of fileList) {
-        if (file.name === '.emptyFolderPlaceholder') continue; // Skip placeholder if exists
-
-        const { data: fileBlob, error: downloadError } = await supabase
-          .storage
-          .from('pdfs')
-          .download(file.name);
-
-        if (downloadError) {
-          console.error(`Error downloading ${file.name}:`, downloadError);
-          continue;
-        }
-
-        const arrayBuffer = await fileBlob.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const savePath = path.join(inputsDir, file.name);
-
-        fs.writeFileSync(savePath, buffer);
-        console.log(`Downloaded: ${file.name}`);
-        downloadResults.push(file.name);
-      }
-
-      console.log('All downloads complete.');
-
-      // 3. Run Python Script Synchronously (PDF Processor)
-      const pythonPath = path.join(__dirname, '../../venv/bin/python');
-      const scriptPath = path.join(__dirname, '../../data-scripts/extractors/pdfProcessor.py');
-
-      console.log('Executing PDF Processor...');
-
-      try {
-        const { stdout, stderr } = await exec(`"${pythonPath}" "${scriptPath}"`);
-        if (stderr) console.error(`PDF Processor stderr: ${stderr}`);
-        console.log(`PDF Processor stdout: ${stdout}`);
-      } catch (scriptError) {
-        console.error(`Error executing PDF Processor: ${scriptError.message}`);
-        throw new Error(`PDF Processor failed: ${scriptError.message}`);
-      }
-
-      // 4. Run Monte Carlo Simulation
-      // Use the 'question' from the request body, or a default if missing
-      const userQuestion = req.body.question || "Run a comprehensive financial risk analysis";
-
-      const monteCarloScriptPath = path.join(__dirname, '../../ml-simulator/montecarlo.py');
-      const mlSimulatorDir = path.join(__dirname, '../../ml-simulator');
-
-      console.log(`Running Monte Carlo simulation: ${monteCarloScriptPath}`);
-      console.log(`Question: ${userQuestion}`);
-
-      const escapedQuestion = userQuestion.replace(/"/g, '\\"');
-
-      try {
-        // Use the SAME python path as pdfProcessor (venv)
-        const { stdout: mcStdout, stderr: mcStderr } = await exec(`"${pythonPath}" "${monteCarloScriptPath}" "${escapedQuestion}"`, {
-          cwd: mlSimulatorDir
-        });
-        console.log('Monte Carlo stdout:', mcStdout);
-        if (mcStderr) console.error('Monte Carlo stderr:', mcStderr);
-      } catch (mcError) {
-        console.error(`Error executing Monte Carlo: ${mcError.message}`);
-        throw new Error(`Monte Carlo simulation failed: ${mcError.message}`);
-      }
-
-      // 5. Read the Computed Metrics JSON (Simpler for Frontend)
-      const jsonOutputPath = path.join(mlSimulatorDir, 'computed_metrics.json');
-      let analysisResult = null;
-
-      try {
-        if (fs.existsSync(jsonOutputPath)) {
-          const jsonContent = fs.readFileSync(jsonOutputPath, 'utf8');
-          analysisResult = JSON.parse(jsonContent);
-          console.log("✅ Successfully read Computed Metrics JSON");
-        } else {
-          console.warn("⚠️ Computed Metrics JSON output file not found:", jsonOutputPath);
-        }
-      } catch (readError) {
-        console.error("❌ Error reading Computed Metrics JSON:", readError);
-      }
-
-      // montecarlo.py can output 'monte_carlo_analysis.json' (comprehensive) or 'computed_metrics.json' (metrics only)
-      const fullAnalysisPath = path.join(mlSimulatorDir, 'monte_carlo_analysis.json');
-      const metricsPath = path.join(mlSimulatorDir, 'computed_metrics.json');
-
-      let responseData = {};
-
-      if (fs.existsSync(fullAnalysisPath)) {
-        const fullAnalysis = JSON.parse(fs.readFileSync(fullAnalysisPath, 'utf-8'));
-        responseData = {
-          question: userQuestion,
-          answer: fullAnalysis.analysis_results?.computed_answer || {},
-          reasoning: fullAnalysis.analysis_results?.llm_explanation || "Analysis completed."
-        };
-      } else if (fs.existsSync(metricsPath)) {
-        const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf-8'));
-        responseData = {
-          question: userQuestion,
-          answer: metrics,
-          reasoning: "Analysis completed (Metrics only)."
-        };
-      } else {
-        throw new Error("No analysis output file found.");
-      }
-
-      // 6. Read Plot and Interpretation (Requested by User)
-      const plotPath = path.join(mlSimulatorDir, 'monte_carlo_bell_curve.png');
-      const interpretationPath = path.join(mlSimulatorDir, 'financial_analysis_interpretation.txt');
-
-      if (fs.existsSync(plotPath)) {
-        const plotBase64 = fs.readFileSync(plotPath, 'base64');
-        responseData.plotImage = `data:image/png;base64,${plotBase64}`;
-      }
-
-      if (fs.existsSync(interpretationPath)) {
-        const interpretationText = fs.readFileSync(interpretationPath, 'utf8');
-        responseData.interpretation = interpretationText;
-      }
-
-      return res.status(200).send({
-        message: 'Analysis completed successfully.',
-        files: results,
-        data: responseData
-      });
+      throw new Error(`Failed to list files from Supabase: ${listError.message}`);
     }
 
-    // Fallback if listError occurred (though rare)
-    return res.status(200).send({
-      message: 'Files uploaded, but processing skipped due to listing error.',
-      files: results
-    });
+    if (!fs.existsSync(INPUTS_DIR)) {
+      fs.mkdirSync(INPUTS_DIR, { recursive: true });
+    }
 
+    for (const file of fileList) {
+      if (file.name === '.emptyFolderPlaceholder') continue;
+
+      const { data: fileBlob, error: downloadError } = await supabase.storage
+        .from('pdfs')
+        .download(file.name);
+
+      if (downloadError) {
+        console.error(`Error downloading ${file.name}:`, downloadError);
+        continue;
+      }
+
+      const arrayBuffer = await fileBlob.arrayBuffer();
+      fs.writeFileSync(path.join(INPUTS_DIR, file.name), Buffer.from(arrayBuffer));
+    }
+
+    console.log('All PDFs downloaded to inputs/');
+
+    // 3. Run PDF Processor
+    console.log('Running PDF Processor...');
+    await runPythonScript(PDF_SCRIPT);
+
+    // 4. Run Monte Carlo Simulation
+    const userQuestion = req.body.question || 'Run a comprehensive financial risk analysis';
+    console.log(`Running Monte Carlo with question: "${userQuestion}"`);
+    await runPythonScript(MC_SCRIPT, [userQuestion], { cwd: MC_OUTPUT_DIR });
+
+    // 5. Read output files
+    const fullAnalysisPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_analysis.json');
+    const metricsPath = path.join(MC_OUTPUT_DIR, 'computed_metrics.json');
+    const plotPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_bell_curve.png');
+    const interpretationPath = path.join(MC_OUTPUT_DIR, 'financial_analysis_interpretation.txt');
+
+    const fullAnalysis = readJsonIfExists(fullAnalysisPath);
+    const metrics = readJsonIfExists(metricsPath);
+
+    let responseData = {};
+
+    if (fullAnalysis) {
+      responseData = {
+        question: userQuestion,
+        answer: fullAnalysis.analysis_results?.computed_answer || {},
+        reasoning: fullAnalysis.analysis_results?.llm_explanation || 'Analysis completed.',
+      };
+    } else if (metrics) {
+      responseData = {
+        question: userQuestion,
+        answer: metrics,
+        reasoning: 'Analysis completed (Metrics only).',
+      };
+    } else {
+      throw new Error('No analysis output file found.');
+    }
+
+    if (fs.existsSync(plotPath)) {
+      responseData.plotImage = `data:image/png;base64,${fs.readFileSync(plotPath, 'base64')}`;
+    }
+
+    if (fs.existsSync(interpretationPath)) {
+      responseData.interpretation = fs.readFileSync(interpretationPath, 'utf8');
+    }
+
+    return res.status(200).json({
+      message: 'Analysis completed successfully.',
+      files: uploadedFiles,
+      data: responseData,
+    });
   } catch (error) {
-    console.error(error.message);
-    return res.status(500).send({ message: error.message });
+    console.error('Upload handler error:', error);
+    return res.status(500).json({ message: error.message });
+  } finally {
+    // Clean up temp uploaded files (best-effort, don't block response)
+    fs.readdir(UPLOADS_DIR, (_, entries) => {
+      if (!entries) return;
+      for (const entry of entries) {
+        fs.unlink(path.join(UPLOADS_DIR, entry), () => {});
+      }
+    });
   }
 };
-
-
