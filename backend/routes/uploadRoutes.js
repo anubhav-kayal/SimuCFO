@@ -6,13 +6,14 @@ const { handleUpload } = require('../controllers/uploadController');
 
 const router = express.Router();
 
+const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = 'uploads/';
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath);
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
     }
-    cb(null, uploadPath);
+    cb(null, UPLOADS_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -22,18 +23,26 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only .pdf format allowed!'));
-    }
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+    files: 10,
+  },
+  fileFilter: (req, file) => {
+    return file.mimetype === 'application/pdf';
   },
 });
 
-// POST /upload - support multiple PDF files using field name "pdfFile"
-router.post('/upload', upload.array('pdfFile'), handleUpload);
+router.post('/upload', upload.array('pdfFile', 10), (err, req, res, next) => {
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ message: 'File too large. Maximum size is 50MB.' });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(413).json({ message: 'Too many files. Maximum is 10.' });
+    }
+    return res.status(400).json({ message: err.message || 'Upload error' });
+  }
+  next();
+}, handleUpload);
 
 module.exports = router;
-
-
