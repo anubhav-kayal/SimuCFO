@@ -1,9 +1,10 @@
 import json
 import asyncio
+import os
 from backboard import BackboardClient
 from backboard.exceptions import BackboardAPIError
 
-API_KEY = "espr_v98ne5cw6JLXhlLiFQNJrRlEdqOeWRbKiFaAJQ4L7oc"
+API_KEY = os.environ.get("BACKBOARD_API_KEY", "")
 
 SYSTEM_PROMPT = """
 You are an intelligent NLP parser for business and financial queries.
@@ -94,6 +95,9 @@ async def run_nlp_pipeline(user_query: str, assistant_id: str, client: Backboard
 
 
 async def main():
+    if not API_KEY:
+        print("❌ BACKBOARD_API_KEY not set in environment")
+        return
     client = BackboardClient(api_key=API_KEY)
 
     print("Initializing assistant (one-time)...")

@@ -473,6 +473,8 @@ def answer_question(question: str, generate_plot: bool = False) -> Dict:
     
     Returns comprehensive analysis JSON with NLP parsing, Monte Carlo simulation data, and LLM-generated explanations.
     """
+    if not nlp.API_KEY:
+        raise ValueError("BACKBOARD_API_KEY not set in environment")
     client = BackboardClient(api_key=nlp.API_KEY)
     
     # Run async function (handles NLP parsing, Monte Carlo simulations, and LLM interpretation)
