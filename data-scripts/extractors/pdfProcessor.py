@@ -160,7 +160,7 @@ def detect_period(text):
         fy_short = str(fy_end_year)[-2:]
         month_cap = month_name.capitalize()
 
-        candidate = f"Q{q} FY{fy_short} ({month_cap} {year})"
+        candidate = f"FY{fy_short}-Q{q} ({month_cap} {year})"
         if best is None:
             best = candidate
 
@@ -174,7 +174,7 @@ def detect_period(text):
         quarter_months = {1: "March", 2: "June", 3: "September", 4: "December"}
         month_name = quarter_months.get(q_num, "March")
         fy_short = str(year)[-2:]
-        candidate = f"Q{q_num} FY{fy_short} ({month_name} {year})"
+        candidate = f"FY{fy_short}-Q{q_num} ({month_name} {year})"
         if best is None:
             best = candidate
 
@@ -419,10 +419,12 @@ def save_to_csv(results):
     )
 
     df = df[columns]
-    try:
-        df = df.sort_values(by="period")
-    except Exception:
-        pass
+
+    # Sort periods chronologically; push "Unknown Period" to end
+    df["_sort_key"] = df["period"].apply(
+        lambda p: p if p != "Unknown Period" else "zzzzzz"
+    )
+    df = df.sort_values(by="_sort_key").drop(columns=["_sort_key"])
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(OUTPUT_FILE, index=False)
