@@ -63,7 +63,13 @@ def load_financials(csv_path):
         "cash_from_operations",
         "capital_expenditure",
         "cash_end_period",
-        "employee_count"
+        "employee_count",
+        "total_current_assets",
+        "total_assets",
+        "short_term_debt",
+        "long_term_debt",
+        "total_liabilities",
+        "shareholders_equity"
     ]
 
     for c in cols:
@@ -86,7 +92,7 @@ def derive_historical_metrics(df):
 
     # SAFE employee handling
     raw_emp = latest["employee_count"]
-    employee_count = int(raw_emp) if raw_emp and raw_emp > 0 else 1
+    employee_count = int(raw_emp) if raw_emp and raw_emp > 0 else None
 
     revenues = df["revenue_total"].values
 
@@ -134,10 +140,35 @@ def derive_historical_metrics(df):
         "capex_cap": capex_cap
     }
 
+    # Balance sheet ratios
+    ta = latest["total_assets"] or 1
+    tl = latest["total_liabilities"] or 0
+    se = latest["shareholders_equity"] or 1
+    tca = latest["total_current_assets"] or 0
+    std = latest["short_term_debt"] or 0
+    ltd = latest["long_term_debt"] or 0
+    ni = latest["net_income"] or 0
+    td = std + ltd
+
+    base["current_ratio"] = tca / tl if tl > 0 else None
+    base["debt_to_equity"] = td / se if se > 0 else None
+    base["roe"] = ni / se if se > 0 else None
+    base["roa"] = ni / ta if ta > 0 else None
+
+    base["short_term_debt"] = std
+    base["long_term_debt"] = ltd
+    base["total_liabilities"] = tl
+    base["shareholders_equity"] = se
+    base["total_current_assets"] = tca
+    base["total_assets"] = ta
+
     # Salary & liquidity rules (still policy, not math)
-    base["average_annual_salary_cost"] = (
-        latest["operating_expenses_total"] * 0.65
-    ) / employee_count
+    if employee_count:
+        base["average_annual_salary_cost"] = (
+            latest["operating_expenses_total"] * 0.65
+        ) / employee_count
+    else:
+        base["average_annual_salary_cost"] = None
 
     base["min_cash_buffer_for_hiring"] = latest["operating_expenses_total"] * 0.5
 
@@ -191,9 +222,10 @@ def run_simulation(base, dists):
     employees = base["employee_count"]
     hired = False
 
-    # --- Revenue ---
+    # --- Revenue (floored at 0) ---
     g = truncated_normal(**dists["revenue_growth"])[0]
     revenue *= (1 + g)
+    revenue = max(revenue, 0)
 
     # --- Operations ---
     margin = truncated_normal(**dists["gross_margin"])[0]
@@ -214,13 +246,14 @@ def run_simulation(base, dists):
     capex_ratio = min(capex_ratio, base["capex_cap"])
     capex = revenue * capex_ratio
 
-    # ALL FOUR CONDITIONS MUST BE TRUE FOR HIRING TO OCCUR
-    if g > 0.05 and (cash > base["min_cash_buffer_for_hiring"] or cash > 0.1 * revenue):
-        rev_per_emp = revenue / employees
-        if rev_per_emp > base["average_annual_salary_cost"] * 2:
-            hired = True
-            cash -= base["average_annual_salary_cost"] * 0.5  # 6 months upfront cost
-            employees += 1
+    # HIRING DECISION — only when employee count is known
+    if employees and base.get("average_annual_salary_cost"):
+        if g > 0.05 and (cash > base["min_cash_buffer_for_hiring"] or cash > 0.1 * revenue):
+            rev_per_emp = revenue / employees
+            if rev_per_emp > base["average_annual_salary_cost"] * 2:
+                hired = True
+                cash -= base["average_annual_salary_cost"] * 0.5  # 6 months upfront cost
+                employees += 1
 
     # --- Cash update ---
     cash += cfo - capex
@@ -230,6 +263,16 @@ def run_simulation(base, dists):
     operating_margin_pct = (operating_income / revenue * 100) if revenue > 0 else 0
     ebitda = operating_income  # Simplified (no depreciation/amortization in model)
     cash_flow = cfo - capex
+
+    # Balance sheet ratio projections
+    ta = base.get("total_assets", 1)
+    tl = base.get("total_liabilities", 0)
+    se = base.get("shareholders_equity", 1)
+    ni = operating_income * (1 - 0.25)  # rough after-tax
+    current_ratio = base.get("current_ratio", 1) * (1 + g * 0.5)
+    debt_to_equity = base.get("debt_to_equity", 0.5) * (1 + g * 0.1)
+    roe = ni / se if se > 0 else 0
+    roa = ni / ta if ta > 0 else 0
 
     return {
         "cash": cash,
@@ -242,7 +285,11 @@ def run_simulation(base, dists):
         "revenue_growth": g,
         "opex": opex,
         "capex": capex,
-        "cfo": cfo
+        "cfo": cfo,
+        "current_ratio": current_ratio,
+        "debt_to_equity": debt_to_equity,
+        "roe": roe,
+        "roa": roa
     }
 
 # =====================================================
@@ -269,6 +316,10 @@ def run_monte_carlo_simulations(base: dict, dists: dict, num_sims: int = None) -
     capex = np.array([s["capex"] for s in simulations])
     cfo = np.array([s["cfo"] for s in simulations])
     hired = np.array([s["hired"] for s in simulations])
+    current_ratio = np.array([s["current_ratio"] for s in simulations])
+    debt_to_equity = np.array([s["debt_to_equity"] for s in simulations])
+    roe = np.array([s["roe"] for s in simulations])
+    roa = np.array([s["roa"] for s in simulations])
     
     return {
         "base": base,
@@ -283,7 +334,11 @@ def run_monte_carlo_simulations(base: dict, dists: dict, num_sims: int = None) -
         "opex": opex,
         "capex": capex,
         "cfo": cfo,
-        "hired": hired
+        "hired": hired,
+        "current_ratio": current_ratio,
+        "debt_to_equity": debt_to_equity,
+        "roe": roe,
+        "roa": roa
     }
 
 
