@@ -34,6 +34,11 @@ async function runPythonScript(scriptPath, args = [], options = {}) {
   return stdout;
 }
 
+function sanitize(input) {
+  if (typeof input !== 'string') return '';
+  return input.replace(/[<>]/g, '').slice(0, 2000);
+}
+
 exports.handleUpload = async (req, res) => {
   try {
     const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
@@ -41,6 +46,8 @@ exports.handleUpload = async (req, res) => {
     if (!files.length) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
+
+    const userQuestion = sanitize(req.body.question || '');
 
     const uploadedFiles = [];
 
@@ -107,9 +114,9 @@ exports.handleUpload = async (req, res) => {
     await runPythonScript(PDF_SCRIPT);
 
     // 4. Run Monte Carlo Simulation
-    const userQuestion = req.body.question || 'Run a comprehensive financial risk analysis';
-    console.log(`Running Monte Carlo with question: "${userQuestion}"`);
-    await runPythonScript(MC_SCRIPT, [userQuestion], { cwd: MC_OUTPUT_DIR });
+    const finalQuestion = userQuestion || 'Run a comprehensive financial risk analysis';
+    console.log(`Running Monte Carlo with question: "${finalQuestion}"`);
+    await runPythonScript(MC_SCRIPT, [finalQuestion], { cwd: MC_OUTPUT_DIR });
 
     // 5. Read output files
     const fullAnalysisPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_analysis.json');
@@ -124,13 +131,13 @@ exports.handleUpload = async (req, res) => {
 
     if (fullAnalysis) {
       responseData = {
-        question: userQuestion,
+        question: finalQuestion,
         answer: fullAnalysis.analysis_results?.computed_answer || {},
         reasoning: fullAnalysis.analysis_results?.llm_explanation || 'Analysis completed.',
       };
     } else if (metrics) {
       responseData = {
-        question: userQuestion,
+        question: finalQuestion,
         answer: metrics,
         reasoning: 'Analysis completed (Metrics only).',
       };
