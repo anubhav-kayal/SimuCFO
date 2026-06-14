@@ -1,0 +1,264 @@
+# SimuCFO — Codebase Review & Remediation Plan
+
+> Generated: 12 June 2026 | Last Updated: 14 June 2026  
+> Scope: Full monorepo audit — PDF extraction, Monte Carlo engine, NLP pipeline, backend API, frontend  
+> Priority: P0 = Critical, P1 = High, P2 = Medium, P3 = Low
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Branch Structure](#branch-structure)
+3. [Architecture Overview](#architecture-overview)
+4. [Issue Status Dashboard](#issue-status-dashboard)
+5. [Remaining Issues](#remaining-issues)
+6. [Next Steps (Day 2 onward)](#next-steps-day-2-onward)
+
+---
+
+## Executive Summary
+
+SimuCFO is a monorepo virtual CFO application that ingests financial PDFs, extracts 32 structured metrics, runs 10k Monte Carlo simulations, and answers natural-language financial questions.
+
+**Day 1 (12 June) completed:** PDF extractor unified with OCR + structured tables, CSV path fixed, backend hardened with timeouts/size limits/cleanup, full UI redesign with dark/light mode, README written. All changes pushed to 3 branches.
+
+**Day 2 (13 June) completed:** Hardcoded API key moved to `BACKBOARD_API_KEY` env var across all Python modules, input sanitization added to user questions, Supabase key renamed to `SUPABASE_SERVICE_KEY`, `.env.example` created. All changes pushed to `main`.
+
+**Day 4-6 (14 June) completed:** NLP consolidation (P2-1): merged `nlp.py` → `nlp_pipeline.py` with rule-based primary + Backboard API fallback when confidence < 0.4. MC refactor (P3-1): split 631-line `montecarlo.py` into `mc_router.py` (routing logic) + thin CLI entry point. All changes pushed to `main`.
+
+---
+
+## Branch Structure
+
+| Branch | What It Contains | Status |
+|--------|------------------|--------|
+| `main` | All Day 1-6 fixes: extractor, MC engine, backend hardening, UI redesign, NLP consolidation, MC router split | ✅ Current |
+| `fix/backend-reliability` | Backend hardening: exec timeout, file cleanup, size limits, dead code removal, graceful shutdown | ✅ Merged into `main` |
+| `feat/modern-financial-ui` | Full UI redesign: dark/light mode, Inter font, financial dashboard aesthetic, Navbar/Home/Product/Processing/Data pages | ✅ Merged into `main` |
+| `data-sets-processing` | Pre-existing branch for dataset processing scripts | ❓ Unknown state |
+
+---
+
+## Architecture Overview
+
+```
+Frontend (React 19 + Vite 7 + Tailwind v4)   Backend (Express 5 + Supabase)
+┌────────────────────────────────┐          ┌────────────────────────────────┐
+│  Landing (Hero/About/Services) │  POST    │  uploadController.js           │
+│  Product (Upload + Ask Q)      │  /upload │  → Supabase storage            │
+│  Processing (Step Tracker)     │ ───────> │  → pdfProcessor.py (Python)    │
+│  Data Dashboard (Results)      │          │  → montecarlo.py (Python)      │
+│  Dark/Light Toggle             │          │  → Return JSON + Plot + Text   │
+└────────────────────────────────┘          └────────────────────────────────┘
+                                                    │
+                          ┌─────────────────────────┼────────────────────┐
+                          │                         │                    │
+                          ▼                         ▼                    ▼
+              ┌──────────────────────┐  ┌───────────────────────┐ ┌──────────────┐
+              │ data-scripts/        │  │ ml-simulator/         │ │ config/      │
+              │ ├ extractors/        │  │ ├ monte_carlo_        │ │ ├ supabase.js│
+              │ │  └ pdfProcessor.py │  │ │  simulations.py     │ └──────────────┘
+              │ ├ schema.json        │  │ ├ mc_router.py        │ │  (routing logic)    │
+              │ ├ inputs/ (PDFs)     │  │ ├ montecarlo.py       │ │  (CLI entry point)  │
+              │ └ output/ (CSV)      │  │ ├ nlp_pipeline.py     │ │  (rule-based + API) │
+              └──────────────────────┘  │ ├ llm_interpreter.py  │
+                                        │ └ *.json / *.png      │
+                                        └───────────────────────┘
+```
+
+---
+
+## Issue Status Dashboard
+
+| ID | Issue | File(s) | Status | Branch |
+|----|-------|---------|--------|--------|
+| **P0-1** | Hardcoded API key in `nlp.py` | `ml-simulator/nlp.py:7` | ✅ Fixed — now reads from `BACKBOARD_API_KEY` env var | main |
+| **P0-2** | CSV path mismatch | `ml-simulator/monte_carlo_simulations.py` | ✅ Fixed — now resolves via `__file__` to `data-scripts/output/` | main |
+| **P0-3** | PDF extraction fragile/lossy | `data-scripts/extractors/pdfProcessor.py` | ✅ Fixed — unified rewrite with structured tables, OCR, schema.json | main |
+| **P0-4** | Duplicate extraction (`testing.py`) | `data-scripts/extractors/testing.py` | ✅ Fixed — deleted, consolidated into `pdfProcessor.py` | main |
+| **P1-1** | `employee_count` defaults to 1 | `ml-simulator/monte_carlo_simulations.py:89` | ✅ Fixed — defaults to `None`, skips hiring when unknown | main |
+| **P1-2** | Period detection wrong FY mapping | `data-scripts/extractors/pdfProcessor.py` | ✅ Fixed — new `detect_period()` with correct Indian FY logic | main |
+| **P1-3** | Backend exec has no timeout | `backend/controllers/uploadController.js` | ✅ Fixed — 300s timeout added | fix/backend-reliability |
+| **P1-4** | Hardcoded venv path | `backend/controllers/uploadController.js` | ✅ Fixed — now points to root `venv/` | main |
+| **P1-5** | Schema format mismatch | `pdfProcessor.py` vs `schema.json` | ✅ Fixed — extractor now reads `schema.json` directly | main |
+| **P2-1** | Duplicate NLP pipelines | `nlp.py` + `nlp_pipeline.py` | ✅ Fixed — consolidated into `nlp_pipeline.py` with rule-based primary + Backboard API fallback | main |
+| **P2-2** | No input validation on questions | `uploadController.js` | ✅ Fixed — `sanitize()` strips `<>`, caps 2000 chars | main |
+| **P2-3** | Revenue can go negative in MC | `ml-simulator/monte_carlo_simulations.py` | ✅ Fixed — floored at 0 after growth | main |
+| **P2-4** | Only 8 of 32 metrics used in MC | `ml-simulator/monte_carlo_simulations.py` | ✅ Fixed — current ratio, D/E, ROE, ROA now simulated | main |
+| **P2-5** | No query caching | — | ❌ Still open | — |
+| **P2-6** | `.env` committed to git | `backend/.env` | ✅ Not tracked — already in `.gitignore` | — |
+| **P2-7** | Supabase anon key used (not service role) | `backend/config/supabase.js` | ✅ Fixed — renamed to `SUPABASE_SERVICE_KEY` + `.env.example` | main |
+| **P3-1** | `montecarlo.py` is monolithic (624 lines) | `ml-simulator/montecarlo.py` | ✅ Fixed — split into `mc_router.py` (routing) + `montecarlo.py` (thin CLI) | main |
+| **P3-2** | No unit tests | — | ❌ Still open | — |
+| **P3-3** | Frontend hardcodes `localhost:5000` | `frontend/src/pages/ProcessingPage.tsx` | ❌ Still open | — |
+| **P3-4** | Period strings don't sort chronologically | `data-scripts/extractors/pdfProcessor.py` | ✅ Fixed — `FY24-Q1` format, `Unknown` pushed to end | main |
+| **P3-5** | Duplicate backboard SDK (npm + pip) | `data-scripts/extractors/node_modules/` | ❌ Still open (node_modules/ untracked) | — |
+| **P3-6** | `reproduce_issue.js` in backend root | `backend/reproduce_issue.js` | ✅ Fixed — deleted | main |
+
+---
+
+## What Was Completed on Day 1 (12 June)
+
+### Branch: `main` (4 commits)
+
+| Commit | Description |
+|--------|-------------|
+| `chore: ignore docs/REVIEW_AND_PLAN.md` | Added to `.gitignore` |
+| `refactor(extractor): unified PDF extraction with schema.json, structured tables, OCR, retry logic` | Combined `pdfProcessor.py` + `testing.py`, reads `schema.json`, preserves table structure, OCR fallback via `pytesseract`, exponential backoff retry |
+| `fix(simulator): correct CSV path to match extractor output` | `CSV_PATH` now resolves via `__file__` |
+| `fix(backend): update python path to working root venv` | Points to `venv/bin/python` instead of nonexistent extractors/venv |
+| `docs: add comprehensive README and clean up stray files` | Full README with architecture, API docs, pipeline flow; removed `reproduce_issue.js` and unused `backboard-sdk` dep |
+
+### Branch: `fix/backend-reliability` (3 commits)
+
+| Commit | Description |
+|--------|-------------|
+| `fix(backend): add exec timeout, cleanup, remove dead code` | 300s timeout, temp file cleanup, removed duplicate JSON read, dead `config/backboard.js`, `reproduce_issue.js` |
+| `fix(backend): add file/body size limits and graceful shutdown` | 50MB file limit, 10 file count limit, 10MB JSON body limit, SIGTERM/SIGINT handling |
+| `chore(backend): remove unused backboard-sdk and dead config files` | Cleaned up dependencies |
+
+### Branch: `feat/modern-financial-ui` (4 commits)
+
+| Commit | Description |
+|--------|-------------|
+| `feat: add dark/light mode theming and design system` | Inter + JetBrains Mono fonts, CSS utilities (glass, card, btn, skeleton), dark-default theme |
+| `feat: add ThemeContext with system preference + local storage persistence` | `ThemeContext.tsx` with `prefers-color-scheme` detection |
+| `feat(ui): redesign all pages with professional financial dashboard aesthetic` | Full rewrite: Navbar (sticky, mobile menu, theme toggle), Hero (stats bar), ProductPage (two-column workflow), ProcessingPage (step tracker), Data page (risk badges, probability coloring) |
+| `feat(ui): update remaining components for dark mode + cleanup` | About, Pricing, FAQ, Contact adapted; removed `tailwind.config.js` (v4 CSS-first) and `App.css` |
+
+---
+
+## Remaining Issues
+
+### P2-5: No query caching
+
+**Fix:** Cache question → analysis results to avoid re-running for identical queries.
+
+### P3-2: No unit tests
+
+**Fix:** Add tests for extraction, simulation, and NLP modules.
+
+### P3-3: Frontend backend URL hardcoded
+
+`ProcessingPage.tsx:39`: `fetch("http://localhost:5000/upload")`
+
+**Fix:** Use Vite `VITE_API_URL` environment variable.
+
+---
+
+## Next Steps
+
+### ✅ Day 2 (13 June): Security & API keys — Done
+
+| Task | Priority | Status |
+|------|----------|--------|
+| Move `API_KEY` in `nlp.py:6` to env var | P0 | ✅ Done |
+| Add basic input sanitization on user questions | P1 | ✅ Done |
+| Remove `.env` from git history | P2 | ✅ Skipped — already in `.gitignore` |
+| Switch Supabase to service_role key | P2 | ✅ Done |
+
+### ✅ Day 3-4 (13 June): Data flow + MC fixes — Done
+
+| Task | Priority | Status |
+|------|----------|--------|
+| Fix `employee_count` default (P1-1) | P1 | ✅ Done |
+| Floor revenue at 0 in simulations (P2-3) | P2 | ✅ Done |
+| Add balance sheet ratios to MC model (P2-4) | P2 | ✅ Done |
+| Make period strings sortable (P3-4) | P3 | ✅ Done |
+
+### ✅ Day 4-6 (14 June): NLP consolidation + MC refactor — Done
+
+| Task | Priority | Status |
+|------|----------|--------|
+| Merge `nlp.py` → `nlp_pipeline.py` (P2-1) | P2 | ✅ Done |
+| Split `montecarlo.py` into CLI + router (P3-1) | P3 | ✅ Done |
+| Scenario comparison mode | Feature | 📅 Planned |
+| Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
+
+### Day 6-8: Features
+
+| Task | Priority |
+|------|----------|
+| Automated PDF chunking (P&L / Balance Sheet / Cash Flow) | Feature |
+| Data quality scoring per metric | Feature |
+| Fan chart time-series visualization | Feature |
+
+### Day 8-10: Testing & polish
+
+| Task | Priority |
+|------|----------|
+| Unit tests for extraction + MC engine | P3 |
+| Integration test (full pipeline) | P3 |
+| Query caching (P2-5) | P2 |
+| Frontend env var cleanup (P3-3) | P3 |
+| Structured logging | P3 |
+
+---
+
+## Extended Feature Ideas
+
+Beyond the active sprint, these features are candidates for future development:
+
+### 🏦 Financial Analysis
+
+| Feature | Description | Effort |
+|---------|-------------|--------|
+| **Ratio Analysis Dashboard** | Auto-compute current ratio, debt-to-equity, ROE, ROA, cash conversion cycle from extracted metrics | Medium |
+| **What-if Scenario Builder** | Interactive UI sliders for growth rate, COGS %, opex — instant re-projection without re-upload | Large |
+| **Multi-company Benchmarking** | Upload multiple companies' financials and compare side-by-side (same metrics, same chart) | Large |
+| **Working Capital Analytics** | Track DSO, DPO, DIO trends with Monte Carlo forecast | Medium |
+| **Automated Report Generation** | Generate downloadable PDF/Excel reports with charts + narrative | Medium |
+
+### 🤖 AI/ML
+
+| Feature | Description | Effort |
+|---------|-------------|--------|
+| **Chat History & Follow-up** | Maintain conversation context for drill-down questions (e.g. "Why? Tell me more about revenue risk") | Medium |
+| **Anomaly Detection** | Flag unusual metric jumps across periods using statistical heuristics (z-score, IQR) | Small |
+| **Forecast Model Comparison** | Compare Monte Carlo vs ARIMA vs Prophet forecasts on the same chart | Large |
+| **Executive Summary** | Auto-generated one-paragraph CEO-ready summary of key risks and opportunities | Small |
+
+### 🧩 Data Pipeline
+
+| Feature | Description | Effort |
+|---------|-------------|--------|
+| **Excel / CSV / API Ingestion** | Beyond PDFs — direct spreadsheet upload, QuickBooks/Xero API integration | Medium |
+| **Bulk Historical Import** | Upload 3-5 years of data for richer distribution fitting (currently single-period) | Medium |
+| **Automated Data Validation** | Flag outliers, missing periods, inconsistent metric trends on ingestion | Small |
+
+### 🎛 UX / Product
+
+| Feature | Description | Effort |
+|---------|-------------|--------|
+| **Customizable Dashboard** | Drag-and-drop widgets: key metrics, charts, risk gauges | Large |
+| **Scheduled / Recurring Analysis** | Auto-run monthly simulations and email the report | Medium |
+| **Share by Link** | Generate shareable report URLs without requiring login | Small |
+| **Export to PPT** | One-click slide deck for board meetings | Medium |
+
+### 🛠 Infrastructure
+
+| Feature | Description | Effort |
+|---------|-------------|--------|
+| **User Auth (Supabase)** | Multi-tenant login/signup, personal dashboard, saved analyses | Medium |
+| **Docker Compose** | One-command self-hosted deployment with all services | Small |
+| **Rate Limiting & Usage Tracking** | Per-user rate limits, feature usage analytics | Medium |
+
+---
+
+## Key Metrics
+
+| Metric | Day 1 Start | Day 2 End | Day 4-6 End | Target |
+|--------|-------------|-----------|-------------|--------|
+| PDF extraction success rate | ~40% (estimated) | ~70% (estimated) | ~70% (estimated) | >90% |
+| Hardcoded API keys | 2 (nlp.py + pdfProcessor.py) | 0 | 0 | 0 |
+| End-to-end pipeline success | Fails (CSV path bug) | Should work | Should work | 95%+ |
+| Input sanitization | None | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | 100% of user inputs |
+| Duplicate NLP modules | 2 (nlp.py + nlp_pipeline.py) | 2 | 1 (consolidated) | 1 |
+| `montecarlo.py` size | 624 lines | 624 lines | ~80 lines (CLI only) | <100 |
+| Test coverage | 0% | 0% | 0% | >60% |
+| Branches | 1 (main) | 1 (main) | 1 (main) | — |
+
+---
+
+*Current: Day 6-8 — Feature development.*
