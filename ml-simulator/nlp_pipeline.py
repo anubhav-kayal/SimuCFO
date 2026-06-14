@@ -1,16 +1,119 @@
 """
 NLP Pipeline for Financial Question Answering
 ===============================================
-This module contains all NLP parsing, question understanding, 
-parameter selection, and answer generation logic.
+Consolidated NLP module: rule-based primary, Backboard API fallback.
 """
 
 import re
 import json
+import asyncio
+import os
 import numpy as np
-from typing import Dict
+from typing import Dict, Optional
+from backboard import BackboardClient
+from backboard.exceptions import BackboardAPIError
 
 # Import Monte Carlo simulation functions
+API_KEY = os.environ.get("BACKBOARD_API_KEY", "")
+
+API_SYSTEM_PROMPT = """
+You are an intelligent NLP parser for business and financial queries.
+
+Your task:
+1. Understand the user's intent
+2. Identify the primary metric being asked about
+3. Extract relevant parameters 
+4. Return a structured, machine-readable JSON object
+
+Return ONLY valid JSON.
+Do NOT include explanations, markdown, or extra text.
+
+Output format:
+
+{{
+  "intent": "<string>",
+  "metric": "<string>",
+  
+  "parameters": {{
+    "<parameter_name>": <value | null>
+  }}
+}}
+
+Rules:
+- intent must be snake_case
+- metric must be a single primary metric (e.g. revenue, cost, profit, cash_flow)
+- parameters must include ONLY values explicitly stated or clearly implied
+- Use null for missing values
+- Do not invent data
+"""
+
+def extract_json(raw_output: str) -> dict:
+    raw_output = raw_output.strip()
+    if raw_output.startswith("```"):
+        raw_output = raw_output.replace("```json", "").replace("```", "").strip()
+    return json.loads(raw_output)
+
+
+async def get_or_create_assistant(client: BackboardClient):
+    try:
+        assistant = await client.create_assistant(
+            name="Finance NLP Parser",
+            system_prompt=API_SYSTEM_PROMPT
+        )
+        return assistant.assistant_id
+    except BackboardAPIError as e:
+        raise RuntimeError("Failed to create assistant (timeout or network issue)") from e
+
+
+async def run_nlp_api(user_query: str, assistant_id: str, client: BackboardClient):
+    """Backboard API-based NLP parsing (fallback when rule-based confidence is low)."""
+    thread = await client.create_thread(assistant_id)
+    response = await client.add_message(
+        thread_id=thread.thread_id,
+        content=user_query,
+        llm_provider="openai",
+        model_name="gpt-4o"
+    )
+    raw_output = response.content.strip()
+    try:
+        parsed = extract_json(raw_output)
+    except Exception:
+        print("RAW MODEL OUTPUT:\n", raw_output)
+        raise ValueError("Model did not return valid JSON")
+
+    if parsed.get("intent") == "assess_risk" and parsed.get("metric"):
+        parsed["intent"] = f'{parsed["metric"]}_risk_analysis'
+
+    if "parameters" not in parsed:
+        parsed["parameters"] = {}
+
+    return parsed
+
+
+async def parse_question_with_fallback(
+    question: str,
+    client: Optional[BackboardClient] = None,
+    assistant_id: Optional[str] = None
+) -> Dict:
+    """Rule-based primary, API-based fallback when confidence < 0.4."""
+    result = parse_question(question)
+    confidence = result.get("nlp_analysis", {}).get("confidence", 0.0)
+
+    if confidence < 0.4 and client and assistant_id and API_KEY:
+        try:
+            api_result = await run_nlp_api(question, assistant_id, client)
+            result["nlp_analysis"]["api_fallback"] = True
+            result["nlp_analysis"]["api_intent"] = api_result.get("intent")
+            result["nlp_analysis"]["api_metric"] = api_result.get("metric")
+            result["nlp_analysis"]["api_parameters"] = api_result.get("parameters", {})
+            result["nlp_analysis"]["api_confidence"] = 0.9
+        except Exception as e:
+            result["nlp_analysis"]["api_fallback"] = False
+            result["nlp_analysis"]["api_error"] = str(e)
+
+    return result
+
+
 from monte_carlo_simulations import (
     load_financials,
     derive_historical_metrics,
