@@ -6,9 +6,12 @@ distribution building, and visualization functions.
 """
 
 import os
+import json
 import pandas as pd
 import numpy as np
 from scipy.stats import truncnorm, lognorm
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple, Optional
 
@@ -377,6 +380,79 @@ def run_engine(return_cash_array=False):
     if return_cash_array:
         return results, cash
     return results
+
+# =====================================================
+# MULTI-PERIOD SIMULATION (for fan charts)
+# =====================================================
+
+def run_simulation_multi_period(base: dict, dists: dict, num_periods: int) -> dict:
+    periods = {
+        "revenue": [],
+        "cash": [],
+        "gross_margin_pct": [],
+        "operating_margin_pct": [],
+        "cash_flow": [],
+        "revenue_growth": [],
+    }
+    revenue = base["revenue"]
+    cash = base["cash"]
+    employees = base["employee_count"]
+    for _ in range(num_periods):
+        g = truncated_normal(**dists["revenue_growth"])[0]
+        revenue *= (1 + g)
+        revenue = max(revenue, 0)
+        margin = truncated_normal(**dists["gross_margin"])[0]
+        opex_ratio = truncated_normal(**dists["opex_ratio"])[0]
+        cash_conv = truncated_normal(**dists["cash_conversion"])[0]
+        gross_profit = revenue * margin
+        opex = revenue * opex_ratio
+        operating_income = gross_profit - opex
+        cfo = operating_income * cash_conv
+        capex_ratio = lognorm(
+            s=dists["capex_ratio"]["std"] / max(dists["capex_ratio"]["mean"], 0.001),
+            scale=dists["capex_ratio"]["mean"]
+        ).rvs()
+        capex_ratio = min(capex_ratio, base["capex_cap"])
+        capex = revenue * capex_ratio
+        if employees and base.get("average_annual_salary_cost"):
+            if g > 0.05 and (cash > base["min_cash_buffer_for_hiring"] or cash > 0.1 * revenue):
+                rev_per_emp = revenue / employees
+                if rev_per_emp > base["average_annual_salary_cost"] * 2:
+                    cash -= base["average_annual_salary_cost"] * 0.5
+                    employees += 1
+        cash += cfo - capex
+        periods["revenue"].append(revenue)
+        periods["cash"].append(cash)
+        periods["gross_margin_pct"].append((gross_profit / revenue * 100) if revenue > 0 else 0)
+        periods["operating_margin_pct"].append((operating_income / revenue * 100) if revenue > 0 else 0)
+        periods["cash_flow"].append(cfo - capex)
+        periods["revenue_growth"].append(g)
+    for k in periods:
+        periods[k] = np.array(periods[k])
+    return periods
+
+
+def run_multi_period_simulations(base: dict, dists: dict, num_periods: int = 8, num_sims: int = None) -> Dict:
+    if num_sims is None:
+        num_sims = min(10000, 2000)
+    all_paths = [run_simulation_multi_period(base, dists, num_periods) for _ in range(num_sims)]
+    result = {"base": base, "num_periods": num_periods, "num_simulations": num_sims}
+    for metric in ["revenue", "cash", "gross_margin_pct", "operating_margin_pct", "cash_flow"]:
+        paths = np.array([p[metric] for p in all_paths])
+        result[metric] = {
+            "median": np.median(paths, axis=0),
+            "p10": np.percentile(paths, 10, axis=0),
+            "p90": np.percentile(paths, 90, axis=0),
+            "p20": np.percentile(paths, 20, axis=0),
+            "p80": np.percentile(paths, 80, axis=0),
+            "p30": np.percentile(paths, 30, axis=0),
+            "p70": np.percentile(paths, 70, axis=0),
+            "p5": np.percentile(paths, 5, axis=0),
+            "p95": np.percentile(paths, 95, axis=0),
+            "paths": paths,
+        }
+    return result
+
 
 # =====================================================
 # VISUALIZATION
