@@ -122,6 +122,8 @@ exports.handleUpload = async (req, res) => {
     const fullAnalysisPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_analysis.json');
     const metricsPath = path.join(MC_OUTPUT_DIR, 'computed_metrics.json');
     const plotPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_bell_curve.png');
+    const fanChartRevenuePath = path.join(MC_OUTPUT_DIR, 'fan_chart_revenue.png');
+    const fanChartCashPath = path.join(MC_OUTPUT_DIR, 'fan_chart_cash.png');
     const interpretationPath = path.join(MC_OUTPUT_DIR, 'financial_analysis_interpretation.txt');
 
     const fullAnalysis = readJsonIfExists(fullAnalysisPath);
@@ -134,6 +136,8 @@ exports.handleUpload = async (req, res) => {
         question: finalQuestion,
         answer: fullAnalysis.analysis_results?.computed_answer || {},
         reasoning: fullAnalysis.analysis_results?.llm_explanation || 'Analysis completed.',
+        statementChunks: fullAnalysis.monte_carlo_simulation?.statement_chunks || null,
+        dataQuality: fullAnalysis.monte_carlo_simulation?.data_quality || null,
       };
     } else if (metrics) {
       responseData = {
@@ -147,6 +151,17 @@ exports.handleUpload = async (req, res) => {
 
     if (fs.existsSync(plotPath)) {
       responseData.plotImage = `data:image/png;base64,${fs.readFileSync(plotPath, 'base64')}`;
+    }
+
+    const fanCharts = {};
+    if (fs.existsSync(fanChartRevenuePath)) {
+      fanCharts.revenue = `data:image/png;base64,${fs.readFileSync(fanChartRevenuePath, 'base64')}`;
+    }
+    if (fs.existsSync(fanChartCashPath)) {
+      fanCharts.cash = `data:image/png;base64,${fs.readFileSync(fanChartCashPath, 'base64')}`;
+    }
+    if (Object.keys(fanCharts).length > 0) {
+      responseData.fanCharts = fanCharts;
     }
 
     if (fs.existsSync(interpretationPath)) {
