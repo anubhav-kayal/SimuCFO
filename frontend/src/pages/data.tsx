@@ -29,6 +29,8 @@ export default function Data() {
   const [plot, setPlot] = useState<string | null>(null);
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [statementChunks, setStatementChunks] = useState<any>(null);
+  const [dataQuality, setDataQuality] = useState<any>(null);
+  const [fanCharts, setFanCharts] = useState<any>(null);
 
   useEffect(() => {
     if (location.state?.data) {
@@ -37,6 +39,8 @@ export default function Data() {
       if (d.plotImage) setPlot(d.plotImage);
       if (d.interpretation) setInterpretation(d.interpretation);
       if (d.statementChunks) setStatementChunks(d.statementChunks);
+      if (d.dataQuality) setDataQuality(d.dataQuality);
+      if (d.fanCharts) setFanCharts(d.fanCharts);
     }
   }, [location.state]);
 
@@ -158,7 +162,115 @@ export default function Data() {
                           </div>
                         )}
 
-                        {/* 3. Probability Distribution (Full Width) */}
+                        {/* 3. Data Quality (Full Width) */}
+                        {dataQuality && (
+                          <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-purple-100 rounded-lg text-[#8c52ff]">
+                                <FaChartLine />
+                              </div>
+                              <h2 className="text-xl font-bold text-gray-800">Data Quality</h2>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-4 mb-4">
+                              <div className={`px-4 py-2 rounded-full text-sm font-bold ${
+                                dataQuality.overall_grade === "A" ? "bg-green-100 text-green-700" :
+                                dataQuality.overall_grade === "B" ? "bg-blue-100 text-blue-700" :
+                                dataQuality.overall_grade === "C" ? "bg-yellow-100 text-yellow-700" :
+                                "bg-red-100 text-red-700"
+                              }`}>
+                                Grade: {dataQuality.overall_grade}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Source: {dataQuality.source_type === "digital" ? "Digital PDF (structured)" : "OCR (scanned)"}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              {["high", "medium", "low", "poor"].map((level) => {
+                                const count = Object.values(dataQuality.metrics || {}).filter(
+                                  (m: any) => m.label === level
+                                ).length;
+                                const colors: Record<string, string> = {
+                                  high: "bg-green-100 text-green-700 border-green-200",
+                                  medium: "bg-blue-100 text-blue-700 border-blue-200",
+                                  low: "bg-yellow-100 text-yellow-700 border-yellow-200",
+                                  poor: "bg-red-100 text-red-700 border-red-200",
+                                };
+                                return count > 0 ? (
+                                  <div key={level} className={`text-center p-3 rounded-xl border ${colors[level]}`}>
+                                    <div className="text-lg font-bold">{count}</div>
+                                    <div className="text-xs capitalize">{level}</div>
+                                  </div>
+                                ) : null;
+                              })}
+                            </div>
+                            {dataQuality.metrics && (
+                              <details className="mt-4">
+                                <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
+                                  Per-metric breakdown
+                                </summary>
+                                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                  {Object.entries(dataQuality.metrics).map(([metric, info]: [string, any]) => {
+                                    const dotColor = info.label === "high" ? "bg-green-500" :
+                                      info.label === "medium" ? "bg-blue-500" :
+                                      info.label === "low" ? "bg-yellow-500" : "bg-red-500";
+                                    return (
+                                      <div key={metric} className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
+                                        <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
+                                        <span className="truncate">{metric.replace(/_/g, " ")}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 4. Forecast Fan Chart (Full Width) */}
+                        {fanCharts && (
+                          <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-purple-100 rounded-lg text-[#8c52ff]">
+                                <FaChartLine />
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-gray-800">Forecast Fan Chart</h2>
+                                <div className="flex gap-2">
+                                  {Object.keys(fanCharts).map((key) => (
+                                    <button
+                                      key={key}
+                                      onClick={() => {
+                                        const t = document.getElementById(`fan-tab-${key}`);
+                                        document.querySelectorAll("[id^=fan-tab-]").forEach((el) => el.classList.remove("bg-purple-600", "text-white"));
+                                        document.querySelectorAll("[id^=fan-panel-]").forEach((el) => el.classList.add("hidden"));
+                                        t?.classList.add("bg-purple-600", "text-white");
+                                        document.getElementById(`fan-panel-${key}`)?.classList.remove("hidden");
+                                      }}
+                                      id={`fan-tab-${key}`}
+                                      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${key === "revenue" ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                                    >
+                                      {key === "revenue" ? "Revenue" : "Cash"}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex justify-center p-4 bg-gray-50 rounded-[20px]">
+                              {Object.entries(fanCharts).map(([key, img]) => (
+                                <div key={key} id={`fan-panel-${key}`} className={key !== "revenue" ? "hidden" : ""}>
+                                  <img
+                                    src={img as string}
+                                    alt={`${key} fan chart`}
+                                    className="max-w-full h-auto rounded-lg shadow-sm"
+                                    style={{ maxHeight: "500px" }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 5. Probability Distribution (Full Width) */}
                         {plotImage && (
                             <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
                                 <div className="flex items-center gap-3 mb-6">
