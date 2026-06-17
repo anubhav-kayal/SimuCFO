@@ -25,12 +25,14 @@ from monte_carlo_simulations import (
     plot_cash_distribution,
     load_statement_chunks,
     load_data_quality,
+    run_multi_period_simulations,
+    plot_fan_chart,
     NUM_SIMULATIONS,
     CSV_PATH
 )
 
 
-async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False) -> Dict:
+async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
     """
     Answer a financial question by:
     1. Parsing question using NLP pipeline (rule-based + API fallback)
@@ -418,12 +420,38 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
     else:
         comprehensive_response["plot_generation"] = {"status": "skipped", "reason": "generate_plot=False"}
 
+    fan_chart_files = []
+    if generate_fan_charts and len(df) >= 1:
+        try:
+            multi_periods = run_multi_period_simulations(base, dists, num_periods=8, num_sims=2000)
+            for metric_name in ["revenue", "cash"]:
+                fan_file = plot_fan_chart(multi_periods, metric=metric_name)
+                fan_chart_files.append(fan_file)
+            comprehensive_response["fan_charts"] = {
+                "status": "generated",
+                "files": fan_chart_files,
+                "num_periods": 8,
+                "metrics": ["revenue", "cash"],
+            }
+            comprehensive_response["_multi_period_data"] = {
+                "revenue_median": multi_periods["revenue"]["median"].tolist(),
+                "revenue_p10": multi_periods["revenue"]["p10"].tolist(),
+                "revenue_p90": multi_periods["revenue"]["p90"].tolist(),
+                "cash_median": multi_periods["cash"]["median"].tolist(),
+                "cash_p10": multi_periods["cash"]["p10"].tolist(),
+                "cash_p90": multi_periods["cash"]["p90"].tolist(),
+            }
+        except Exception as e:
+            comprehensive_response["fan_charts"] = {"status": "failed", "error": str(e)}
+    else:
+        comprehensive_response["fan_charts"] = {"status": "skipped"}
+
     comprehensive_response["_plot_metadata"] = plot_metadata
 
     return comprehensive_response
 
 
-def answer_question(question: str, generate_plot: bool = False) -> Dict:
+def answer_question(question: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
     """
     Synchronous wrapper for answer_question_async.
     """
@@ -436,7 +464,7 @@ def answer_question(question: str, generate_plot: bool = False) -> Dict:
     try:
         nlp_assistant_id = loop.run_until_complete(get_or_create_assistant(client))
         interpreter_assistant_id = loop.run_until_complete(get_or_create_interpreter_assistant(client))
-        result = loop.run_until_complete(answer_question_async(question, client, nlp_assistant_id, interpreter_assistant_id, generate_plot))
+        result = loop.run_until_complete(answer_question_async(question, client, nlp_assistant_id, interpreter_assistant_id, generate_plot, generate_fan_charts))
         return result
     finally:
         loop.close()
