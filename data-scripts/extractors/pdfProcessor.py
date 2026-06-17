@@ -723,6 +723,24 @@ def save_to_csv(results, chunks=None, quality_data=None):
         quality_path.write_text(json.dumps(quality_output, indent=2))
         print(f"   📊 Data quality saved to {quality_path}")
 
+    if chunks:
+        chunk_summary = {}
+        for stmt_type, data in chunks.items():
+            if data["tables"] or len(data.get("text", "")) > 100:
+                chunk_summary[stmt_type] = {
+                    "table_count": len(data["tables"]),
+                    "text_length": len(data.get("text", "")),
+                    "metric_count": 0,
+                }
+        if chunk_summary:
+            for m in METRICS_SCHEMA:
+                cat = m.get("statement_type", "unknown")
+                if cat in chunk_summary:
+                    chunk_summary[cat]["metric_count"] += 1
+            chunk_path = OUTPUT_DIR / "statement_chunks.json"
+            chunk_path.write_text(json.dumps(chunk_summary, indent=2))
+            print(f"   📑 Statement chunk summary saved to {chunk_path}")
+
 
 # ── Main ──────────────────────────────────────────────────────
 async def main():
