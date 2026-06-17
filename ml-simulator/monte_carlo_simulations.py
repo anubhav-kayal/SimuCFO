@@ -458,6 +458,49 @@ def run_multi_period_simulations(base: dict, dists: dict, num_periods: int = 8, 
 # VISUALIZATION
 # =====================================================
 
+def plot_fan_chart(multi_period_results: dict, metric: str = "revenue", title: str = None):
+    data = multi_period_results[metric]
+    num_periods = multi_period_results["num_periods"]
+    base = multi_period_results["base"]
+    periods = np.arange(1, num_periods + 1)
+    starting_value = base.get(
+        metric if metric not in ("gross_margin_pct", "operating_margin_pct", "cash_flow") else "revenue", 0
+    )
+    fig, ax = plt.subplots(figsize=(14, 8))
+    ax.fill_between(periods, data["p5"], data["p95"], alpha=0.1, color="steelblue", label="5th-95th (90% CI)")
+    ax.fill_between(periods, data["p10"], data["p90"], alpha=0.15, color="steelblue", label="10th-90th (80% CI)")
+    ax.fill_between(periods, data["p20"], data["p80"], alpha=0.2, color="steelblue", label="20th-80th (60% CI)")
+    ax.fill_between(periods, data["p30"], data["p70"], alpha=0.3, color="steelblue", label="30th-70th (40% CI)")
+    ax.plot(periods, data["median"], "b-", linewidth=3, label="Median", zorder=5)
+    ax.plot(periods, data["p5"], "b--", linewidth=1.5, alpha=0.6, label="P5 / P95")
+    ax.plot(periods, data["p95"], "b--", linewidth=1.5, alpha=0.6)
+    ax.axhline(starting_value, color="purple", linestyle=":", linewidth=2, alpha=0.7,
+               label=f"Starting: {starting_value:,.0f}")
+    metric_label = metric.replace("_pct", "").replace("_", " ").title()
+    ax.set_xlabel("Period (Quarterly)", fontsize=13, fontweight="bold")
+    ax.set_ylabel(metric_label, fontsize=13, fontweight="bold")
+    ax.set_title(title or f"{metric_label} Forecast Fan Chart\n{multi_period_results['num_simulations']:,} Simulations",
+                 fontsize=15, fontweight="bold", pad=20)
+    ax.set_xticks(periods)
+    ax.set_xticklabels([f"Q{i}" for i in periods])
+    ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.5)
+    ax.legend(loc="best", fontsize=10, framealpha=0.95, ncol=2)
+    stats_text = f"""Forecast at Period {num_periods}:
+Median: {data['median'][-1]:,.0f}
+P10: {data['p10'][-1]:,.0f}
+P90: {data['p90'][-1]:,.0f}
+Range: {data['p90'][-1] - data['p10'][-1]:,.0f}"""
+    ax.text(0.02, 0.98, stats_text, transform=ax.transAxes,
+            fontsize=10, verticalalignment="top", family="monospace",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.9, edgecolor="black"))
+    plt.tight_layout()
+    filename = f"fan_chart_{metric}.png"
+    plt.savefig(filename, dpi=300, bbox_inches="tight")
+    print(f"\n📊 Fan chart saved as '{filename}'")
+    plt.close()
+    return filename
+
+
 def plot_monte_carlo_bell_curve(results: dict, cash_outcomes: np.ndarray):
     """
     Plot the Monte Carlo simulation results as a bell curve (normal distribution)
