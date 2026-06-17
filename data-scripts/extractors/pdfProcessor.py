@@ -113,6 +113,138 @@ def format_tables_for_prompt(tables_data):
     return "\n\n".join(blocks)
 
 
+# ── Statement type detection (PDF chunking) ───────────────────
+STATEMENT_PATTERNS = {
+    "income_statement": [
+        r"(?i)(profit\s*(and|&)\s*loss|income\s*statement|statement\s*of\s*profit|p\s*[&and]\s*l|trading\s*account|revenue\s*statement)",
+        r"(?i)(revenue|sales|turnover|gross\s*profit|cogs|cost\s*of\s*goods|operating\s*income|net\s*income|earnings)",
+        r"(?i)(income\s*tax|tax\s*expense|profit\s*before\s*tax|ebit|ebitda)",
+    ],
+    "balance_sheet": [
+        r"(?i)(balance\s*sheet|statement\s*of\s*financial\s*position|financial\s*position|assets\s*(and|&)\s*liabilities)",
+        r"(?i)(current\s*assets|fixed\s*assets|intangible\s*assets|total\s*assets|shareholders?\s*equity)",
+        r"(?i)(liabilities|borrowings|debt|equity|share\s*capital|reserves|net\s*worth)",
+    ],
+    "cash_flow": [
+        r"(?i)(cash\s*flow|statement\s*of\s*cash\s*flows|cash\s*flow\s*statement|funds\s*flow)",
+        r"(?i)(operating\s*cash\s*flow|cash\s*from\s*operations|investing\s*activities|financing\s*activities)",
+        r"(?i)(net\s*change\s*in\s*cash|closing\s*cash|ending\s*cash|cash\s*at\s*end)",
+    ],
+}
+
+
+def detect_statement_type(text: str) -> str:
+    if not text or len(text.strip()) < 20:
+        return "unknown"
+    scores = {}
+    for stmt_type, patterns in STATEMENT_PATTERNS.items():
+        score = 0
+        for pattern in patterns:
+            matches = re.findall(pattern, text)
+            score += len(matches) * 2
+        names = {
+            "income_statement": ["profit", "loss", "revenue", "income statement", "p&l"],
+            "balance_sheet": ["balance sheet", "assets", "liabilities", "equity"],
+            "cash_flow": ["cash flow", "cashflow"],
+        }
+        for keyword in names.get(stmt_type, []):
+            score += len(re.findall(rf"(?i){re.escape(keyword)}", text))
+        scores[stmt_type] = score
+    text_lower = text.lower()
+    header_lines = [l.strip().lower() for l in text.split("\n") if l.strip() and len(l.strip()) < 100]
+    for line in header_lines[:10]:
+        if re.search(r"(?i)(profit\s*(and|&)\s*loss|income\s*statement)", line):
+            scores["income_statement"] += 10
+        if re.search(r"(?i)(balance\s*sheet|statement\s*of\s*financial\s*position)", line):
+            scores["balance_sheet"] += 10
+        if re.search(r"(?i)(cash\s*flow|statement\s*of\s*cash\s*flows)", line):
+            scores["cash_flow"] += 10
+    best = max(scores, key=scores.get)
+    return best if scores[best] >= 3 else "unknown"
+
+
+def chunk_pdf_by_statement(tables_data: list, raw_text: str) -> dict:
+    chunks = {
+        "income_statement": {"tables": [], "text": ""},
+        "balance_sheet": {"tables": [], "text": ""},
+        "cash_flow": {"tables": [], "text": ""},
+        "unknown": {"tables": [], "text": ""},
+    }
+    for tbl in tables_data:
+        table_text = " ".join(tbl["headers"]) + " " + " ".join(
+            " ".join(row) for row in tbl["rows"]
+        )
+        stmt_type = detect_statement_type(table_text)
+        chunks[stmt_type]["tables"].append(tbl)
+        chunks[stmt_type]["text"] += f"\n--- {stmt_type} table ---\n{table_text[:3000]}\n"
+    pages = raw_text.split("--- PAGE")
+    for page_text in pages:
+        if not page_text.strip():
+            continue
+        stmt_type = detect_statement_type(page_text)
+        chunks[stmt_type]["text"] += f"\n--- {stmt_type} text ---\n{page_text[:5000]}\n"
+    return chunks
+
+
+def format_chunked_prompt(chunks: dict, detected_period: str, schema_str: str) -> str:
+    sections = []
+    statement_labels = {
+        "income_statement": "PROFIT & LOSS STATEMENT (Income Statement)",
+        "balance_sheet": "BALANCE SHEET",
+        "cash_flow": "CASH FLOW STATEMENT",
+        "unknown": "OTHER FINANCIAL DATA",
+    }
+    category_metrics = {
+        "income_statement": [],
+        "balance_sheet": [],
+        "cash_flow": [],
+        "operating_metrics": [],
+    }
+    for m in METRICS_SCHEMA:
+        cat = m.get("statement_type", "income_statement")
+        category_metrics.setdefault(cat, []).append(m["metric_name"])
+    for stmt_type in ["income_statement", "balance_sheet", "cash_flow", "unknown"]:
+        chunk = chunks.get(stmt_type, {"tables": [], "text": ""})
+        if not chunk["tables"] and not chunk["text"].strip():
+            continue
+        label = statement_labels.get(stmt_type, stmt_type)
+        section = f"=== {label} ==="
+        if chunk["tables"]:
+            section += "\n\nStructured Tables:\n"
+            section += format_tables_for_prompt(chunk["tables"])
+        if chunk["text"].strip() and len(chunk["text"].strip()) > 50:
+            section += f"\n\nAdditional Text:\n{chunk['text'][:15000]}"
+        sections.append(section)
+    prompt = f"""EXTRACT FINANCIAL METRICS BY STATEMENT TYPE
+
+Period to Extract: "{detected_period}"
+
+The financial data below is organized by statement type (P&L, Balance Sheet, Cash Flow).
+Extract metrics according to their category.
+
+Metrics by category:
+"""
+    for cat, metrics in category_metrics.items():
+        if metrics:
+            prompt += f"\n{cat.replace('_', ' ').upper()}: {', '.join(metrics)}\n"
+    prompt += f"""
+Required Schema:
+{schema_str}
+
+Data:
+{chr(10).join(sections)}
+
+INSTRUCTIONS:
+1. Extract ALL metrics for the period: "{detected_period}".
+2. Match each metric to its correct statement category above.
+3. If a metric is missing, use 0 (not N/A).
+4. If "gross_profit" is missing, calculate: revenue_total - cost_of_revenue.
+5. Output in CSV format: metric_name,value
+6. Use EXACT metric names from the schema.
+"""
+    return prompt
+
+
 # ── Period extraction (improved) ──────────────────────────────
 FISCAL_MONTH_ORDER = [
     "april", "may", "june", "july", "august", "september",
@@ -264,28 +396,31 @@ async def call_with_retry(client, pdf_path, filtered_context, detected_period, s
     4. Use EXACT metric names from the schema provided.
     """
 
-    context_to_send = filtered_context[:CONTEXT_CHAR_LIMIT]
-    if len(filtered_context) > CONTEXT_CHAR_LIMIT:
-        print(f"   ⚠️ Context truncated from {len(filtered_context)} to {len(context_to_send)} chars")
+    if filtered_context.strip().startswith("EXTRACT FINANCIAL METRICS BY STATEMENT TYPE"):
+        user_message = filtered_context
+    else:
+        context_to_send = filtered_context[:CONTEXT_CHAR_LIMIT]
+        if len(filtered_context) > CONTEXT_CHAR_LIMIT:
+            print(f"   ⚠️ Context truncated from {len(filtered_context)} to {len(context_to_send)} chars")
 
-    user_message = f"""
-    EXTRACT FINANCIAL METRICS
+        user_message = f"""
+        EXTRACT FINANCIAL METRICS
 
-    Period to Extract: "{detected_period}"
+        Period to Extract: "{detected_period}"
 
-    Financial Statement Data:
-    {context_to_send}
+        Financial Statement Data:
+        {context_to_send}
 
-    Required Metrics Schema:
-    {schema_str}
+        Required Metrics Schema:
+        {schema_str}
 
-    INSTRUCTIONS:
-    1. Extract ALL metrics for the period: "{detected_period}".
-    2. If a metric is missing, use 0 (not N/A).
-    3. If "gross_profit" is missing, calculate: revenue_total - cost_of_revenue.
-    4. Output in CSV format: metric_name,value
-    5. Use EXACT metric names from the schema.
-    """
+        INSTRUCTIONS:
+        1. Extract ALL metrics for the period: "{detected_period}".
+        2. If a metric is missing, use 0 (not N/A).
+        3. If "gross_profit" is missing, calculate: revenue_total - cost_of_revenue.
+        4. Output in CSV format: metric_name,value
+        5. Use EXACT metric names from the schema.
+        """
 
     last_error = None
     for attempt in range(MAX_RETRIES):
@@ -359,23 +494,29 @@ async def process_file(client, pdf_path):
 
     if len(raw_text.strip()) < MIN_TEXT_CHARS:
         print(f"   ❌ Insufficient text ({len(raw_text.strip())} chars). Skipping.")
-        return None
-
-    formatted_tables = format_tables_for_prompt(tables_data)
-    if formatted_tables:
-        filtered_context = f"""STRUCTURED TABLES FROM FINANCIAL STATEMENTS:
-{formatted_tables}
-
-RAW TEXT (for context):
-{raw_text[:30000]}"""
-    else:
-        filtered_context = raw_text
+        return None, None
 
     detected_period = detect_period(raw_text[:5000] + raw_text[-3000:])
     print(f"   📅 Detected Period: {detected_period}")
 
     schema_str = json.dumps(METRICS_SCHEMA, indent=2)
-    return await call_with_retry(client, pdf_path, filtered_context, detected_period, schema_str)
+
+    chunks = chunk_pdf_by_statement(tables_data, raw_text)
+    chunked_prompt = format_chunked_prompt(chunks, detected_period, schema_str)
+
+    if len(chunked_prompt) > CONTEXT_CHAR_LIMIT:
+        print(f"   ⚠️ Chunked prompt truncated from {len(chunked_prompt)} to {CONTEXT_CHAR_LIMIT} chars")
+        chunked_prompt = chunked_prompt[:CONTEXT_CHAR_LIMIT]
+
+    found_types = [t for t in ["income_statement", "balance_sheet", "cash_flow"] if chunks[t]["tables"] or len(chunks[t].get("text", "")) > 100]
+    if found_types:
+        print(f"   📑 Statements detected: {', '.join(t.replace('_', ' ').title() for t in found_types)}")
+    else:
+        print(f"   📑 No clear statement type detected — using full context")
+
+    filtered_context = chunked_prompt
+    result = await call_with_retry(client, pdf_path, filtered_context, detected_period, schema_str)
+    return result, chunks
 
 
 # ── Validation & CSV ──────────────────────────────────────────
@@ -455,14 +596,16 @@ async def main():
     print(f"📂 Found {len(pdf_files)} PDF file(s).")
 
     all_results = []
+    all_chunks = []
     failed_files = []
 
     for idx, pdf_path in enumerate(pdf_files, 1):
         print(f"\n[{idx}/{len(pdf_files)}] {pdf_path.name}")
         try:
-            result = await process_file(client, pdf_path)
+            result, chunks = await process_file(client, pdf_path)
             if result and validate_extracted_data(result):
                 all_results.append(result)
+                all_chunks.append(chunks)
                 save_to_csv(all_results)
                 print(f"   ✅ Success")
             else:
