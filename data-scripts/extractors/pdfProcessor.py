@@ -531,7 +531,126 @@ def validate_extracted_data(data):
     return has_non_zero
 
 
-def save_to_csv(results):
+# ── Data Quality Scoring ──────────────────────────────────────
+QUALITY_WEIGHTS = {
+    "source_structured_table": 1.0,
+    "source_raw_text": 0.7,
+    "source_ocr": 0.4,
+    "source_derived": 0.6,
+    "extracted_direct": 1.0,
+    "extracted_zero": 0.3,
+}
+
+STATEMENT_EXPECTED_RANGES = {
+    "income_statement": {
+        "revenue_total": {"min": 0},
+        "cost_of_revenue": {"min": 0},
+        "gross_profit": {"min": 0},
+        "operating_expenses_total": {"min": 0},
+        "net_income": {},
+        "operating_income": {},
+    },
+    "balance_sheet": {
+        "total_assets": {"min": 0},
+        "total_current_assets": {"min": 0},
+        "cash_and_equivalents": {"min": 0},
+        "short_term_investments": {"min": 0},
+        "shareholders_equity": {},
+        "total_liabilities": {"min": 0},
+        "short_term_debt": {"min": 0},
+        "long_term_debt": {"min": 0},
+    },
+    "cash_flow": {
+        "cash_end_period": {},
+        "cash_from_operations": {},
+        "capital_expenditure": {"max": 0},
+        "net_change_in_cash": {},
+    },
+    "operating_metrics": {
+        "employee_count": {"min": 0, "max": 1_000_000},
+        "customer_count": {"min": 0},
+        "branch_count": {"min": 0},
+    },
+}
+
+
+def get_metric_statement_type(metric_name: str) -> str:
+    for m in METRICS_SCHEMA:
+        if m["metric_name"] == metric_name:
+            return m.get("statement_type", "unknown")
+    return "unknown"
+
+
+def score_data_quality(data: dict, is_scanned: bool = False, has_structured_tables: bool = False) -> dict:
+    quality_scores = {}
+    derived_metrics = {"gross_profit", "operating_expenses_total", "operating_income"}
+    for metric_name in SCHEMA_METRIC_NAMES:
+        flags = []
+        value = data.get(metric_name)
+        score = 1.0
+        if is_scanned:
+            score *= 0.4
+            flags.append("ocr_scanned")
+        elif not has_structured_tables:
+            score *= 0.7
+            flags.append("raw_text_only")
+        if metric_name in derived_metrics:
+            if value == 0:
+                derived = False
+                for other in derived_metrics:
+                    if data.get(other, 0) != 0:
+                        derived = True
+                        break
+                if derived:
+                    score *= 0.6
+                    flags.append("derived_calculated")
+        if value == 0:
+            score *= 0.3
+            flags.append("zero_value")
+        elif value is None:
+            score = 0.0
+            flags.append("missing")
+        if value is not None and value != 0:
+            stmt_type = get_metric_statement_type(metric_name)
+            ranges = STATEMENT_EXPECTED_RANGES.get(stmt_type, {}).get(metric_name, {})
+            if "min" in ranges and value < ranges["min"]:
+                score *= 0.5
+                flags.append(f"below_min_{ranges['min']}")
+            if "max" in ranges and value > ranges["max"]:
+                score *= 0.5
+                flags.append(f"above_max_{ranges['max']}")
+            if metric_name == "total_current_assets" and data.get("total_assets", 0) > 0:
+                if value > data["total_assets"]:
+                    score *= 0.3
+                    flags.append("exceeds_total_assets")
+            if metric_name == "gross_profit" and data.get("revenue_total", 0) > 0:
+                if value > data["revenue_total"]:
+                    score *= 0.3
+                    flags.append("gross_profit_exceeds_revenue")
+            if metric_name == "cash_end_period" and value < 0:
+                score *= 0.7
+                flags.append("negative_cash")
+            if metric_name == "employee_count" and value > 0 and value < 1:
+                score *= 0.3
+                flags.append("implausible_employee_count")
+        score = max(0.0, min(1.0, round(score, 2)))
+        if score >= 0.8:
+            label = "high"
+        elif score >= 0.5:
+            label = "medium"
+        elif score >= 0.2:
+            label = "low"
+        else:
+            label = "poor"
+        quality_scores[metric_name] = {
+            "score": score,
+            "label": label,
+            "flags": flags,
+        }
+    return quality_scores
+
+
+def save_to_csv(results, chunks=None):
     if not results:
         return
     schema_cols = [m["metric_name"] for m in METRICS_SCHEMA]
