@@ -1,137 +1,175 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "description": "Canonical financial metrics and their semantic aliases",
+  "statement_categories": {
+    "income_statement": "Profit & Loss statement metrics",
+    "balance_sheet": "Balance sheet position metrics",
+    "cash_flow": "Cash flow statement metrics",
+    "operating_metrics": "Operational / non-financial metrics"
+  },
   "metrics": [
 
     {
       "metric_name": "revenue_total",
+      "statement_type": "income_statement",
       "aliases": ["total revenue", "net revenue", "net sales", "sales", "turnover", "operating revenue"]
     },
     {
       "metric_name": "cost_of_revenue",
+      "statement_type": "income_statement",
       "aliases": ["cost of goods sold", "cogs", "cost of sales", "direct costs"]
     },
     {
       "metric_name": "gross_profit",
+      "statement_type": "income_statement",
       "aliases": ["gross profit", "gross income"]
     },
     {
       "metric_name": "operating_expenses_total",
+      "statement_type": "income_statement",
       "aliases": ["operating expenses", "total operating expenses", "opex"]
     },
     {
       "metric_name": "employee_costs",
+      "statement_type": "income_statement",
       "aliases": ["employee expenses", "staff costs", "payroll", "salaries and wages"]
     },
     {
       "metric_name": "selling_marketing_expense",
+      "statement_type": "income_statement",
       "aliases": ["sales and marketing", "marketing expense", "selling expenses", "advertising"]
     },
     {
       "metric_name": "rnd_expense",
+      "statement_type": "income_statement",
       "aliases": ["research and development", "r&d", "product development expense"]
     },
     {
       "metric_name": "general_admin_expense",
+      "statement_type": "income_statement",
       "aliases": ["general and administrative", "g&a", "administrative expenses", "overheads"]
     },
     {
       "metric_name": "operating_income",
+      "statement_type": "income_statement",
       "aliases": ["operating income", "operating profit", "ebit"]
     },
     {
       "metric_name": "interest_expense",
+      "statement_type": "income_statement",
       "aliases": ["interest expense", "finance cost", "borrowing cost"]
     },
     {
       "metric_name": "tax_expense",
+      "statement_type": "income_statement",
       "aliases": ["tax expense", "income tax", "provision for tax"]
     },
     {
       "metric_name": "net_income",
+      "statement_type": "income_statement",
       "aliases": ["net income", "net profit", "profit after tax", "pat"]
     },
 
     {
       "metric_name": "cash_from_operations",
+      "statement_type": "cash_flow",
       "aliases": ["cash flow from operations", "operating cash flow", "cfo"]
     },
     {
       "metric_name": "capital_expenditure",
+      "statement_type": "cash_flow",
       "aliases": ["capital expenditure", "capex", "purchase of fixed assets"]
     },
     {
       "metric_name": "cash_from_investing",
+      "statement_type": "cash_flow",
       "aliases": ["cash flow from investing", "investing cash flow"]
     },
     {
       "metric_name": "cash_from_financing",
+      "statement_type": "cash_flow",
       "aliases": ["cash flow from financing", "financing cash flow"]
     },
     {
       "metric_name": "dividends_paid",
+      "statement_type": "cash_flow",
       "aliases": ["dividends paid", "equity dividends"]
     },
     {
       "metric_name": "net_change_in_cash",
+      "statement_type": "cash_flow",
       "aliases": ["net change in cash", "net increase in cash", "cash movement"]
     },
     {
       "metric_name": "cash_end_period",
+      "statement_type": "cash_flow",
       "aliases": ["closing cash balance", "cash at end of period", "ending cash"]
     },
 
     {
       "metric_name": "cash_and_equivalents",
+      "statement_type": "balance_sheet",
       "aliases": ["cash and cash equivalents", "cash balance", "bank balance"]
     },
     {
       "metric_name": "short_term_investments",
+      "statement_type": "balance_sheet",
       "aliases": ["short term investments", "marketable securities"]
     },
     {
       "metric_name": "total_current_assets",
+      "statement_type": "balance_sheet",
       "aliases": ["current assets", "total current assets"]
     },
     {
       "metric_name": "total_assets",
+      "statement_type": "balance_sheet",
       "aliases": ["total assets"]
     },
     {
       "metric_name": "short_term_debt",
+      "statement_type": "balance_sheet",
       "aliases": ["short term borrowings", "current debt"]
     },
     {
       "metric_name": "long_term_debt",
+      "statement_type": "balance_sheet",
       "aliases": ["long term borrowings", "non current debt"]
     },
     {
       "metric_name": "total_liabilities",
+      "statement_type": "balance_sheet",
       "aliases": ["total liabilities"]
     },
     {
       "metric_name": "shareholders_equity",
+      "statement_type": "balance_sheet",
       "aliases": ["shareholder equity", "owners equity", "net worth"]
     },
 
     {
       "metric_name": "employee_count",
+      "statement_type": "operating_metrics",
       "aliases": ["number of employees", "headcount", "staff strength"]
     },
     {
       "metric_name": "avg_employee_cost",
+      "statement_type": "operating_metrics",
       "aliases": ["average employee cost", "cost per employee"]
     },
     {
       "metric_name": "branch_count",
+      "statement_type": "operating_metrics",
       "aliases": ["branch count", "delivery centers", "office locations"]
     },
     {
       "metric_name": "customer_count",
+      "statement_type": "operating_metrics",
       "aliases": ["number of customers", "active customers", "clients"]
     },
     {
       "metric_name": "segment_revenue",
+      "statement_type": "operating_metrics",
       "aliases": ["revenue by segment", "segment wise revenue"]
     }
   ]
