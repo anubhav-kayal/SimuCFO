@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../assets/components/Navbar";
 import Footer from "../assets/components/Footer";
-import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaTriangleExclamation, FaChartColumn } from "react-icons/fa6";
+import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaTriangleExclamation, FaChartColumn, FaFileLines } from "react-icons/fa6";
 
 function formatKey(k: string) {
   return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -28,6 +28,7 @@ export default function Data() {
   const [data, setData] = useState<any>(null);
   const [plot, setPlot] = useState<string | null>(null);
   const [interpretation, setInterpretation] = useState<string | null>(null);
+  const [statementChunks, setStatementChunks] = useState<any>(null);
 
   useEffect(() => {
     if (location.state?.data) {
@@ -35,6 +36,7 @@ export default function Data() {
       setData(d.answer || d.analysis || d);
       if (d.plotImage) setPlot(d.plotImage);
       if (d.interpretation) setInterpretation(d.interpretation);
+      if (d.statementChunks) setStatementChunks(d.statementChunks);
     }
   }, [location.state]);
 
@@ -119,7 +121,44 @@ export default function Data() {
                             </h3>
                         </div>
 
-                        {/* 2. Probability Distribution (Full Width) */}
+                        {/* 2. Document Structure (Full Width) */}
+                        {statementChunks && (
+                          <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 bg-purple-100 rounded-lg text-[#8c52ff]">
+                                <FaFileLines />
+                              </div>
+                              <h2 className="text-xl font-bold text-gray-800">Document Structure</h2>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                              {Object.entries(statementChunks).map(([type, info]: [string, any]) => {
+                                const labels: Record<string, string> = {
+                                  income_statement: "P&L Statement",
+                                  balance_sheet: "Balance Sheet",
+                                  cash_flow: "Cash Flow",
+                                  operating_metrics: "Operating Metrics",
+                                };
+                                const icons: Record<string, string> = {
+                                  income_statement: "📊",
+                                  balance_sheet: "📋",
+                                  cash_flow: "💵",
+                                  operating_metrics: "📈",
+                                };
+                                return (
+                                  <div key={type} className="bg-gray-50 p-4 rounded-[20px] border border-gray-100">
+                                    <div className="text-2xl mb-2">{icons[type] || "📄"}</div>
+                                    <div className="text-sm font-bold text-gray-800 mb-1">{labels[type] || type}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {info.table_count} table{info.table_count !== 1 ? "s" : ""} · {info.metric_count} metric{info.metric_count !== 1 ? "s" : ""}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. Probability Distribution (Full Width) */}
                         {plotImage && (
                             <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
                                 <div className="flex items-center gap-3 mb-6">
@@ -139,7 +178,7 @@ export default function Data() {
                             </div>
                         )}
 
-                        {/* 3. Computed Metrics (Full Width) */}
+                        {/* 4. Computed Metrics (Full Width) */}
                         <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[30px] border border-white shadow-sm">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-3 bg-purple-100 rounded-xl text-[#8c52ff]">
@@ -170,7 +209,7 @@ export default function Data() {
                             </div>
                         </div>
 
-                        {/* 4. Interpretation Card (Full Width) */}
+                        {/* 5. Interpretation Card (Full Width) */}
                         <div className="bg-[#1a1a1a] text-white p-8 rounded-[30px] shadow-2xl relative overflow-hidden min-h-[300px] mb-20">
                             {/* Abstract blob inside */}
                             <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-[#8c52ff] rounded-full blur-[60px] opacity-60"></div>
