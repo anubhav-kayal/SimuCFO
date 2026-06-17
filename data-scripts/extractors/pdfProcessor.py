@@ -481,6 +481,8 @@ async def process_file(client, pdf_path):
     print(f"{'='*60}")
 
     tables_data, raw_text, is_scanned = extract_structured_tables(pdf_path)
+    used_ocr = False
+    had_structured_tables = len(tables_data) > 0
 
     if is_scanned:
         print(f"   📄 Scanned PDF detected — attempting OCR...")
@@ -488,6 +490,8 @@ async def process_file(client, pdf_path):
         if ocr_text and len(ocr_text.strip()) > MIN_TEXT_CHARS:
             raw_text = ocr_text
             tables_data = []
+            used_ocr = True
+            had_structured_tables = False
             print(f"   ✅ OCR extracted {len(ocr_text)} chars")
         else:
             print(f"   ⚠️ OCR produced insufficient text. Falling through with {len(raw_text)} chars.")
@@ -516,7 +520,22 @@ async def process_file(client, pdf_path):
 
     filtered_context = chunked_prompt
     result = await call_with_retry(client, pdf_path, filtered_context, detected_period, schema_str)
-    return result, chunks
+
+    quality = score_data_quality(result or {}, is_scanned=used_ocr, has_structured_tables=had_structured_tables)
+    overall_quality = round(sum(q["score"] for q in quality.values()) / max(len(quality), 1), 2)
+    if overall_quality >= 0.8:
+        quality_grade = "A"
+    elif overall_quality >= 0.6:
+        quality_grade = "B"
+    elif overall_quality >= 0.4:
+        quality_grade = "C"
+    elif overall_quality >= 0.2:
+        quality_grade = "D"
+    else:
+        quality_grade = "F"
+    print(f"   📊 Data quality grade: {quality_grade} (overall: {overall_quality})")
+
+    return result, chunks, quality, quality_grade
 
 
 # ── Validation & CSV ──────────────────────────────────────────
@@ -650,9 +669,13 @@ def score_data_quality(data: dict, is_scanned: bool = False, has_structured_tabl
     return quality_scores
 
 
-def save_to_csv(results, chunks=None):
+def save_to_csv(results, chunks=None, quality_data=None):
     if not results:
         return
+    quality_dict = None
+    quality_grade = None
+    if quality_data:
+        quality_dict, quality_grade = quality_data
     schema_cols = [m["metric_name"] for m in METRICS_SCHEMA]
     columns = ["period"] + schema_cols
 
@@ -690,6 +713,16 @@ def save_to_csv(results, chunks=None):
     df.to_csv(OUTPUT_FILE, index=False)
     print(f"   💾 CSV saved to {OUTPUT_FILE}")
 
+    if quality_dict:
+        quality_path = OUTPUT_DIR / "data_quality.json"
+        quality_output = {
+            "overall_grade": quality_grade or "N/A",
+            "metrics": quality_dict,
+            "source_type": "ocr" if any(q["flags"] for q in quality_dict.values() if "ocr" in q["flags"]) else "digital",
+        }
+        quality_path.write_text(json.dumps(quality_output, indent=2))
+        print(f"   📊 Data quality saved to {quality_path}")
+
 
 # ── Main ──────────────────────────────────────────────────────
 async def main():
@@ -716,17 +749,19 @@ async def main():
 
     all_results = []
     all_chunks = []
+    all_quality = []
     failed_files = []
 
     for idx, pdf_path in enumerate(pdf_files, 1):
         print(f"\n[{idx}/{len(pdf_files)}] {pdf_path.name}")
         try:
-            result, chunks = await process_file(client, pdf_path)
+            result, chunks, quality, quality_grade = await process_file(client, pdf_path)
             if result and validate_extracted_data(result):
                 all_results.append(result)
                 all_chunks.append(chunks)
-                save_to_csv(all_results)
-                print(f"   ✅ Success")
+                all_quality.append((quality, quality_grade))
+                save_to_csv(all_results, chunks, quality_data=(quality, quality_grade))
+                print(f"   ✅ Success (quality: {quality_grade})")
             else:
                 failed_files.append((pdf_path.name, "Validation failed"))
         except Exception as e:
