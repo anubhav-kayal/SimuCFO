@@ -23,6 +23,8 @@ from monte_carlo_simulations import (
     plot_monte_carlo_bell_curve,
     plot_revenue_distribution,
     plot_cash_distribution,
+    load_statement_chunks,
+    load_data_quality,
     NUM_SIMULATIONS,
     CSV_PATH
 )
@@ -84,6 +86,9 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
         df = df_full.copy()
         periods_used = df["period"].tolist() if "period" in df.columns else [f"Period {i+1}" for i in range(len(df))]
         note = f"Analysis based on all available data: {len(df)} periods"
+
+    statement_chunks = load_statement_chunks()
+    data_quality = load_data_quality()
 
     base = derive_historical_metrics(df)
     dists = build_distributions(base)
@@ -270,6 +275,8 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
             "num_simulations": NUM_SIMULATIONS,
             "simulation_method": "Monte Carlo with historical data-driven distributions",
             "historical_data_periods": len(df),
+            "statement_chunks": statement_chunks,
+            "data_quality": data_quality,
             "base_metrics": {
                 "starting_revenue": float(base["revenue"]),
                 "starting_cash": float(base["cash"]),
@@ -346,6 +353,8 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
             "num_simulations": NUM_SIMULATIONS,
             "simulation_method": "Monte Carlo with historical data-driven distributions",
             "historical_data_periods": len(df),
+            "statement_chunks": statement_chunks,
+            "data_quality": data_quality,
             "base_metrics": {
                 "starting_revenue": float(base["revenue"]),
                 "starting_cash": float(base["cash"]),
