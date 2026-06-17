@@ -1,6 +1,6 @@
 # SimuCFO — Codebase Review & Remediation Plan
 
-> Generated: 12 June 2026 | Last Updated: 14 June 2026  
+> Generated: 12 June 2026 | Last Updated: 17 June 2026  
 > Scope: Full monorepo audit — PDF extraction, Monte Carlo engine, NLP pipeline, backend API, frontend  
 > Priority: P0 = Critical, P1 = High, P2 = Medium, P3 = Low
 
@@ -26,6 +26,8 @@ SimuCFO is a monorepo virtual CFO application that ingests financial PDFs, extra
 **Day 2 (13 June) completed:** Hardcoded API key moved to `BACKBOARD_API_KEY` env var across all Python modules, input sanitization added to user questions, Supabase key renamed to `SUPABASE_SERVICE_KEY`, `.env.example` created. All changes pushed to `main`.
 
 **Day 4-6 (14 June) completed:** NLP consolidation (P2-1): merged `nlp.py` → `nlp_pipeline.py` with rule-based primary + Backboard API fallback when confidence < 0.4. MC refactor (P3-1): split 631-line `montecarlo.py` into `mc_router.py` (routing logic) + thin CLI entry point. All changes pushed to `main`.
+
+**Day 6-8 (17 June) completed:** Three feature deliveries — (1) Automated PDF chunking: `detect_statement_type()` classifies content as P&L, Balance Sheet, or Cash Flow; `chunk_pdf_by_statement()` groups tables/text by type; `format_chunked_prompt()` sends a statement-organized prompt to the AI with per-category metric expectations. (2) Data quality scoring: `score_data_quality()` rates each of 29 metrics on a 0-1 scale combinin source quality, extraction method, zero/missing penalties, and cross-field sanity checks; outputs grade A-F. (3) Fan chart visualization: `run_multi_period_simulations()` runs 2000 paths over 8 quarters; `plot_fan_chart()` renders uncertainty bands (40%-90% CI) with median line. All changes pushed to `main` across 15 commits.
 
 ---
 
@@ -53,18 +55,24 @@ Frontend (React 19 + Vite 7 + Tailwind v4)   Backend (Express 5 + Supabase)
 └────────────────────────────────┘          └────────────────────────────────┘
                                                     │
                           ┌─────────────────────────┼────────────────────┐
-                          │                         │                    │
-                          ▼                         ▼                    ▼
-              ┌──────────────────────┐  ┌───────────────────────┐ ┌──────────────┐
-              │ data-scripts/        │  │ ml-simulator/         │ │ config/      │
-              │ ├ extractors/        │  │ ├ monte_carlo_        │ │ ├ supabase.js│
-              │ │  └ pdfProcessor.py │  │ │  simulations.py     │ └──────────────┘
-              │ ├ schema.json        │  │ ├ mc_router.py        │ │  (routing logic)    │
-              │ ├ inputs/ (PDFs)     │  │ ├ montecarlo.py       │ │  (CLI entry point)  │
-              │ └ output/ (CSV)      │  │ ├ nlp_pipeline.py     │ │  (rule-based + API) │
-              └──────────────────────┘  │ ├ llm_interpreter.py  │
-                                        │ └ *.json / *.png      │
-                                        └───────────────────────┘
+                    │                         │                    │
+                    ▼                         ▼                    ▼
+        ┌──────────────────────────┐  ┌───────────────────────────┐ ┌──────────────┐
+        │ data-scripts/            │  │ ml-simulator/             │ │ config/      │
+        │ ├ extractors/            │  │ ├ monte_carlo_            │ │ ├ supabase.js│
+        │ │  └ pdfProcessor.py     │  │ │  simulations.py         │ └──────────────┘
+        │ ├ schema.json            │  │ │  (+ fan chart, multi-   │
+        │ ├ inputs/ (PDFs)         │  │ │   period, meta loaders) │
+        │ └ output/                │  │ ├ mc_router.py            │
+        │   ├ monte_carlo_final    │  │ │  (+ statement_chunks,   │
+        │   │  _data.csv           │  │ │   data_quality, fan     │
+        │   ├ statement_chunks.json│  │ │   chart passthrough)    │
+        │   └ data_quality.json    │  │ ├ montecarlo.py (CLI)     │
+        └──────────────────────────┘  │ ├ nlp_pipeline.py         │
+                                      │ ├ llm_interpreter.py      │
+                                      │ └ *.json / *.png          │
+                                      │   (+ fan_chart_*.png)     │
+                                      └───────────────────────────┘
 ```
 
 ---
@@ -95,6 +103,11 @@ Frontend (React 19 + Vite 7 + Tailwind v4)   Backend (Express 5 + Supabase)
 | **P3-4** | Period strings don't sort chronologically | `data-scripts/extractors/pdfProcessor.py` | ✅ Fixed — `FY24-Q1` format, `Unknown` pushed to end | main |
 | **P3-5** | Duplicate backboard SDK (npm + pip) | `data-scripts/extractors/node_modules/` | ❌ Still open (node_modules/ untracked) | — |
 | **P3-6** | `reproduce_issue.js` in backend root | `backend/reproduce_issue.js` | ✅ Fixed — deleted | main |
+| **F-1** | Automated PDF chunking | `data-scripts/extractors/pdfProcessor.py` | ✅ Done — `detect_statement_type()`, `chunk_pdf_by_statement()`, `format_chunked_prompt()` | main |
+| **F-2** | Data quality scoring | `data-scripts/extractors/pdfProcessor.py` | ✅ Done — `score_data_quality()` with source quality, sanity checks, A-F grade | main |
+| **F-3** | Fan chart time-series visualization | `ml-simulator/monte_carlo_simulations.py` | ✅ Done — `run_multi_period_simulations()`, `plot_fan_chart()` with confidence bands | main |
+| **F-4** | `data_quality.json` not cleaned up between runs | `data-scripts/output/` | ⚠️ Known — stale quality files persist if PDF processing is skipped | — |
+| **F-5** | Fan chart cwd assumption | `ml-simulator/monte_carlo_simulations.py` | ⚠️ Known — fan_chart_*.png saves to CWD, not output dir | — |
 
 ---
 
@@ -176,13 +189,15 @@ Frontend (React 19 + Vite 7 + Tailwind v4)   Backend (Express 5 + Supabase)
 | Scenario comparison mode | Feature | 📅 Planned |
 | Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
 
-### Day 6-8: Features
+### ✅ Day 6-8 (17 June): Features — Done
 
-| Task | Priority |
-|------|----------|
-| Automated PDF chunking (P&L / Balance Sheet / Cash Flow) | Feature |
-| Data quality scoring per metric | Feature |
-| Fan chart time-series visualization | Feature |
+| Task | Priority | Status |
+|------|----------|--------|
+| Automated PDF chunking (P&L / Balance Sheet / Cash Flow) | Feature | ✅ Done |
+| Data quality scoring per metric | Feature | ✅ Done |
+| Fan chart time-series visualization | Feature | ✅ Done |
+| Scenario comparison mode | Feature | 📅 Planned |
+| Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
 
 ### Day 8-10: Testing & polish
 
@@ -248,17 +263,20 @@ Beyond the active sprint, these features are candidates for future development:
 
 ## Key Metrics
 
-| Metric | Day 1 Start | Day 2 End | Day 4-6 End | Target |
-|--------|-------------|-----------|-------------|--------|
-| PDF extraction success rate | ~40% (estimated) | ~70% (estimated) | ~70% (estimated) | >90% |
-| Hardcoded API keys | 2 (nlp.py + pdfProcessor.py) | 0 | 0 | 0 |
-| End-to-end pipeline success | Fails (CSV path bug) | Should work | Should work | 95%+ |
-| Input sanitization | None | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | 100% of user inputs |
-| Duplicate NLP modules | 2 (nlp.py + nlp_pipeline.py) | 2 | 1 (consolidated) | 1 |
-| `montecarlo.py` size | 624 lines | 624 lines | ~80 lines (CLI only) | <100 |
-| Test coverage | 0% | 0% | 0% | >60% |
-| Branches | 1 (main) | 1 (main) | 1 (main) | — |
+| Metric | Day 1 Start | Day 2 End | Day 4-6 End | Day 6-8 End | Target |
+|--------|-------------|-----------|-------------|-------------|--------|
+| PDF extraction success rate | ~40% (estimated) | ~70% (estimated) | ~70% (estimated) | ~70% (estimated) | >90% |
+| Hardcoded API keys | 2 (nlp.py + pdfProcessor.py) | 0 | 0 | 0 | 0 |
+| End-to-end pipeline success | Fails (CSV path bug) | Should work | Should work | Should work | 95%+ |
+| Input sanitization | None | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | 100% of user inputs |
+| Duplicate NLP modules | 2 (nlp.py + nlp_pipeline.py) | 2 | 1 (consolidated) | 1 | 1 |
+| `montecarlo.py` size | 624 lines | 624 lines | ~80 lines (CLI only) | ~80 lines (CLI only) | <100 |
+| PDF statement chunking | None | None | None | ✅ `detect_statement_type()` + chunked prompts | Automatic |
+| Data quality scoring | None | None | None | ✅ Per-metric 0-1 score + A-F grade | Per metric |
+| Fan chart visualization | None | None | None | ✅ Multi-period (8Q) with confidence bands | Time-series viz |
+| Test coverage | 0% | 0% | 0% | 0% | >60% |
+| Branches | 1 (main) | 1 (main) | 1 (main) | 1 (main) | — |
 
 ---
 
-*Current: Day 6-8 — Feature development.*
+*Current: Day 8-10 — Testing & polish.*
