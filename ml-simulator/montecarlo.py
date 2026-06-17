@@ -36,7 +36,7 @@ if __name__ == "__main__":
     else:
         start_time = time.time()
 
-        comprehensive_answer = answer_question(question, generate_plot=True)
+        comprehensive_answer = answer_question(question, generate_plot=True, generate_fan_charts=True)
 
         analysis_results = comprehensive_answer.get("analysis_results", {})
         llm_explanation = analysis_results.get("llm_explanation", "")
