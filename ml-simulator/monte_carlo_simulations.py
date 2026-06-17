@@ -24,6 +24,26 @@ NUM_SIMULATIONS = 10000
 np.random.seed(42)
 
 # =====================================================
+# META-DATA LOADERS
+# =====================================================
+
+def load_statement_chunks():
+    chunk_path = os.path.join(os.path.dirname(CSV_PATH), "statement_chunks.json")
+    if os.path.exists(chunk_path):
+        with open(chunk_path) as f:
+            return json.load(f)
+    return None
+
+
+def load_data_quality():
+    quality_path = os.path.join(os.path.dirname(CSV_PATH), "data_quality.json")
+    if os.path.exists(quality_path):
+        with open(quality_path) as f:
+            return json.load(f)
+    return None
+
+
+# =====================================================
 # UTILITY FUNCTIONS
 # =====================================================
 
@@ -356,7 +376,12 @@ def run_engine(return_cash_array=False):
     revenue = sim_data["revenue"]
     hire_results = sim_data["hired"]
 
+    statement_chunks = load_statement_chunks()
+    data_quality = load_data_quality()
+
     results = {
+        "statement_chunks": statement_chunks,
+        "data_quality": data_quality,
         "starting_cash": base["cash"],
         "starting_revenue": base["revenue"],
         "median_ending_cash": float(np.median(cash)),
