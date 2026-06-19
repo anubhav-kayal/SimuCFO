@@ -7,6 +7,7 @@ Thin CLI wrapper around mc_router. Run directly or from backend:
 """
 
 import sys
+import os
 import json
 import time
 import matplotlib
@@ -14,7 +15,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from mc_router import answer_question
-from monte_carlo_simulations import run_engine, plot_monte_carlo_bell_curve
+from monte_carlo_simulations import run_engine, plot_monte_carlo_bell_curve, OUTPUT_DIR
 
 
 if __name__ == "__main__":
@@ -43,7 +44,7 @@ if __name__ == "__main__":
         computed_answer = analysis_results.get("computed_answer", {})
         data_used = analysis_results.get("data_used", {})
 
-        interpretation_file = "financial_analysis_interpretation.txt"
+        interpretation_file = os.path.join(OUTPUT_DIR, "financial_analysis_interpretation.txt")
         with open(interpretation_file, 'w', encoding='utf-8') as f:
             f.write("=" * 70 + "\n")
             f.write("FINANCIAL ANALYSIS - STRUCTURED INTERPRETATION\n")
@@ -59,7 +60,7 @@ if __name__ == "__main__":
                 f.write(f"Note: {data_used.get('note', 'N/A')}\n")
             f.write("=" * 70 + "\n")
 
-        metrics_file = "computed_metrics.json"
+        metrics_file = os.path.join(OUTPUT_DIR, "computed_metrics.json")
         metrics_data = computed_answer.copy() if computed_answer else {}
         if analysis_results.get("metrics"):
             metrics_data.update(analysis_results.get("metrics", {}))
@@ -88,7 +89,7 @@ if __name__ == "__main__":
             print(f"Note: {data_used.get('note', 'N/A')}")
             print("=" * 70)
 
-        output_file = "monte_carlo_analysis.json"
+        output_file = os.path.join(OUTPUT_DIR, "monte_carlo_analysis.json")
         json_to_save = comprehensive_answer.copy()
         json_to_save.pop("_plot_metadata", None)
         with open(output_file, 'w', encoding='utf-8') as f:
