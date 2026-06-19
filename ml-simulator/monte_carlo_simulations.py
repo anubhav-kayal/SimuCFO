@@ -20,6 +20,7 @@ from typing import Dict, List, Tuple, Optional
 # =====================================================
 
 CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data-scripts", "output", "monte_carlo_final_data.csv")
+OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 NUM_SIMULATIONS = 10000
 np.random.seed(42)
 
@@ -61,7 +62,7 @@ def safe_float(value):
 
 def truncated_normal(mean, std, min_val, max_val, size=1):
     """Generate samples from a truncated normal distribution."""
-    if std <= 0:
+    if std <= 0 or np.isclose(min_val, max_val):
         return np.full(size, mean)
     a, b = (min_val - mean) / std, (max_val - mean) / std
     return truncnorm.rvs(a, b, loc=mean, scale=std, size=size)
@@ -134,32 +135,46 @@ def derive_historical_metrics(df):
 
     capex_ratios = (df["capital_expenditure"].abs() / df["revenue_total"]).dropna()
 
-    # 🔑 DATA-DRIVEN CapEx cap (THIS IS THE KEY FIX)
-    capex_cap = float(np.percentile(capex_ratios, 95))
+    # Handle single-period data gracefully
+    if len(revenue_growths) == 0:
+        revenue_growth_mean = 0.0
+        revenue_growth_std = 0.08
+        revenue_growth_min = -0.15
+        revenue_growth_max = 0.15
+    else:
+        revenue_growth_mean = float(np.mean(revenue_growths))
+        revenue_growth_std = float(np.std(revenue_growths)) or 0.08
+        revenue_growth_min = float(np.percentile(revenue_growths, 5))
+        revenue_growth_max = float(np.percentile(revenue_growths, 95))
+
+    cash_conv_mean = float(cash_conversion.mean()) if len(cash_conversion) > 0 else 1.0
+    cash_conv_std = float(cash_conversion.std()) if len(cash_conversion) > 0 and cash_conversion.std() > 0 else 0.15
+    capex_mean = float(capex_ratios.mean()) if len(capex_ratios) > 0 else 0.05
+    capex_std = float(capex_ratios.std()) if len(capex_ratios) > 0 and capex_ratios.std() > 0 else 0.03
+    capex_cap = float(np.percentile(capex_ratios, 95)) if len(capex_ratios) > 0 else 0.05
 
     base = {
         "revenue": latest["revenue_total"],
         "cash": latest["cash_end_period"],
         "employee_count": employee_count,
 
-        "revenue_growth_mean": float(np.mean(revenue_growths)),
-        "revenue_growth_std": float(np.std(revenue_growths)) or 0.08,
-        "revenue_growth_min": float(np.percentile(revenue_growths, 5)),
-        "revenue_growth_max": float(np.percentile(revenue_growths, 95)),
+        "revenue_growth_mean": revenue_growth_mean,
+        "revenue_growth_std": revenue_growth_std,
+        "revenue_growth_min": revenue_growth_min,
+        "revenue_growth_max": revenue_growth_max,
 
-        "gross_margin_mean": float(gross_margins.mean()),
-        "gross_margin_std": float(gross_margins.std()) or 0.04,
+        "gross_margin_mean": float(gross_margins.mean()) if len(gross_margins) > 0 else 0.4,
+        "gross_margin_std": float(gross_margins.std()) if len(gross_margins) > 1 else 0.04,
 
-        "opex_ratio_mean": float(opex_ratios.mean()),
-        "opex_ratio_std": float(opex_ratios.std()) or 0.05,
+        "opex_ratio_mean": float(opex_ratios.mean()) if len(opex_ratios) > 0 else 0.25,
+        "opex_ratio_std": float(opex_ratios.std()) if len(opex_ratios) > 1 else 0.05,
 
-        "cash_conversion_mean": float(cash_conversion.mean()),
-        "cash_conversion_std": float(cash_conversion.std()) or 0.15,
+        "cash_conversion_mean": cash_conv_mean,
+        "cash_conversion_std": cash_conv_std,
 
-        "capex_ratio_mean": float(capex_ratios.mean()),
-        "capex_ratio_std": float(capex_ratios.std()) or 0.03,
+        "capex_ratio_mean": capex_mean,
+        "capex_ratio_std": capex_std,
 
-        # 🔥 learned from CSV, not assumed
         "capex_cap": capex_cap
     }
 
@@ -519,7 +534,7 @@ Range: {data['p90'][-1] - data['p10'][-1]:,.0f}"""
             fontsize=10, verticalalignment="top", family="monospace",
             bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.9, edgecolor="black"))
     plt.tight_layout()
-    filename = f"fan_chart_{metric}.png"
+    filename = os.path.join(OUTPUT_DIR, f"fan_chart_{metric}.png")
     plt.savefig(filename, dpi=300, bbox_inches="tight")
     print(f"\n📊 Fan chart saved as '{filename}'")
     plt.close()
@@ -607,8 +622,8 @@ Prob Should Hire: {results.get('probability_should_hire', 0)*100:.2f}%"""
                 bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8, edgecolor='blue'))
     
     plt.tight_layout()
-    plt.savefig('monte_carlo_bell_curve.png', dpi=300, bbox_inches='tight')
-    print("\n📊 Graph saved as 'monte_carlo_bell_curve.png'")
+    plt.savefig(os.path.join(OUTPUT_DIR, 'monte_carlo_bell_curve.png'), dpi=300, bbox_inches='tight')
+    print(f"\n📊 Graph saved as '{os.path.join(OUTPUT_DIR, 'monte_carlo_bell_curve.png')}'")
     plt.close()  # Close figure instead of showing (non-blocking)
 
 
@@ -648,8 +663,8 @@ def plot_revenue_distribution(sim_data: Dict):
     ax.legend()
     
     plt.tight_layout()
-    plt.savefig('revenue_distribution.png', dpi=300, bbox_inches='tight')
-    print("\n📊 Revenue distribution graph saved as 'revenue_distribution.png'")
+    plt.savefig(os.path.join(OUTPUT_DIR, 'revenue_distribution.png'), dpi=300, bbox_inches='tight')
+    print(f"\n📊 Revenue distribution graph saved as '{os.path.join(OUTPUT_DIR, 'revenue_distribution.png')}'")
     plt.close()  # Close figure instead of showing (non-blocking)
 
 
@@ -693,6 +708,6 @@ def plot_cash_distribution(sim_data: Dict):
     ax.legend()
     
     plt.tight_layout()
-    plt.savefig('cash_distribution.png', dpi=300, bbox_inches='tight')
-    print("\n📊 Cash distribution graph saved as 'cash_distribution.png'")
+    plt.savefig(os.path.join(OUTPUT_DIR, 'cash_distribution.png'), dpi=300, bbox_inches='tight')
+    print(f"\n📊 Cash distribution graph saved as '{os.path.join(OUTPUT_DIR, 'cash_distribution.png')}'")
     plt.close()  # Close figure instead of showing (non-blocking)

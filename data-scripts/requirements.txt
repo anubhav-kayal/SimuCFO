@@ -4,3 +4,4 @@ backboard-sdk
 openpyxl
 pytesseract
 pdf2image
+pytest
