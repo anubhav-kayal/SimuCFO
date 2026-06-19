@@ -36,7 +36,8 @@ export default function ProcessingPage() {
       formData.append("question", question);
 
       try {
-        const res = await fetch("http://localhost:5000/upload", { method: "POST", body: formData });
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const res = await fetch(`${apiUrl}/upload`, { method: "POST", body: formData });
         clearInterval(progress);
         setStep(STEPS.length - 1);
 
