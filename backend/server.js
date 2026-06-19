@@ -1,33 +1,34 @@
 require('dotenv').config();
 const app = require('./app');
+const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  logger.info('Server started', { port: PORT, url: `http://localhost:${PORT}` });
 });
 
 server.on('error', (error) => {
   if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Please free up the port and restart.`);
+    logger.error('Port already in use', { port: PORT });
     process.exit(1);
   } else {
-    console.error('Server error:', error);
+    logger.error('Server error', { error: error.message });
   }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled rejection', { reason });
 });
 
 function gracefulShutdown(signal) {
-  console.log(`\n${signal} received. Shutting down gracefully...`);
+  logger.info('Shutdown signal received', { signal });
   server.close(() => {
-    console.log('HTTP server closed.');
+    logger.info('HTTP server closed');
     process.exit(0);
   });
   setTimeout(() => {
-    console.error('Forced shutdown after timeout.');
+    logger.error('Forced shutdown after timeout');
     process.exit(1);
   }, 10_000);
 }
