@@ -4,6 +4,8 @@ const supabase = require('../config/supabase');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const { rm } = require('fs/promises');
+const cache = require('../utils/cache');
+const logger = require('../utils/logger');
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const INPUTS_DIR = path.join(__dirname, '..', '..', 'data-scripts', 'inputs');
@@ -29,7 +31,7 @@ async function runPythonScript(scriptPath, args = [], options = {}) {
     ...options,
   });
   if (stderr) {
-    console.warn(`[${path.basename(scriptPath)}] stderr:`, stderr);
+    logger.warn('Python stderr', { script: path.basename(scriptPath), stderr });
   }
   return stdout;
 }
@@ -78,7 +80,19 @@ exports.handleUpload = async (req, res) => {
       });
     }
 
-    // 2. Download all PDFs from Supabase to inputs folder
+    // 2. Check cache
+    const cacheKey = cache.makeKey(userQuestion, files);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      logger.info('Cache hit — returning cached analysis', { cacheKey });
+      return res.status(200).json({
+        message: 'Analysis completed successfully (cached).',
+        files: uploadedFiles,
+        data: cached,
+      });
+    }
+
+    // 3. Download all PDFs from Supabase to inputs folder
     const { data: fileList, error: listError } = await supabase.storage
       .from('pdfs')
       .list();
@@ -99,7 +113,7 @@ exports.handleUpload = async (req, res) => {
         .download(file.name);
 
       if (downloadError) {
-        console.error(`Error downloading ${file.name}:`, downloadError);
+        logger.error('Error downloading file from Supabase', { fileName: file.name, error: downloadError.message });
         continue;
       }
 
@@ -107,18 +121,18 @@ exports.handleUpload = async (req, res) => {
       fs.writeFileSync(path.join(INPUTS_DIR, file.name), Buffer.from(arrayBuffer));
     }
 
-    console.log('All PDFs downloaded to inputs/');
+    logger.info('All PDFs downloaded to inputs/');
 
-    // 3. Run PDF Processor
-    console.log('Running PDF Processor...');
+    // 4. Run PDF Processor
+    logger.info('Running PDF Processor...');
     await runPythonScript(PDF_SCRIPT);
 
-    // 4. Run Monte Carlo Simulation
+    // 5. Run Monte Carlo Simulation
     const finalQuestion = userQuestion || 'Run a comprehensive financial risk analysis';
-    console.log(`Running Monte Carlo with question: "${finalQuestion}"`);
+    logger.info('Running Monte Carlo', { question: finalQuestion });
     await runPythonScript(MC_SCRIPT, [finalQuestion], { cwd: MC_OUTPUT_DIR });
 
-    // 5. Read output files
+    // 6. Read output files
     const fullAnalysisPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_analysis.json');
     const metricsPath = path.join(MC_OUTPUT_DIR, 'computed_metrics.json');
     const plotPath = path.join(MC_OUTPUT_DIR, 'monte_carlo_bell_curve.png');
@@ -168,13 +182,15 @@ exports.handleUpload = async (req, res) => {
       responseData.interpretation = fs.readFileSync(interpretationPath, 'utf8');
     }
 
+    cache.set(cacheKey, responseData);
+
     return res.status(200).json({
       message: 'Analysis completed successfully.',
       files: uploadedFiles,
       data: responseData,
     });
   } catch (error) {
-    console.error('Upload handler error:', error);
+    logger.error('Upload handler error', { error: error.message });
     return res.status(500).json({ message: error.message });
   } finally {
     // Clean up temp uploaded files (best-effort, don't block response)
