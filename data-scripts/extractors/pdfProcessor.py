@@ -752,6 +752,14 @@ async def main():
         print("❌ BACKBOARD_API_KEY not set in environment")
         return
 
+    # Clean up stale output files from previous runs
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    for stale in ["data_quality.json", "statement_chunks.json"]:
+        stale_path = OUTPUT_DIR / stale
+        if stale_path.exists():
+            stale_path.unlink()
+            print(f"   🧹 Cleaned up stale {stale}")
+
     try:
         client = BackboardClient(api_key=API_KEY)
     except Exception as e:
