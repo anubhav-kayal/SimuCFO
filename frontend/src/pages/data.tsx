@@ -58,30 +58,6 @@ export default function Data() {
   const entries = data ? Object.entries(data).filter(([k]) => k !== "question") : [];
 
   return (
-    <div className="min-h-screen bg-dark-50 dark:bg-dark-950">
-      <Navbar />
-
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-20">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-sm font-medium text-accent dark:bg-accent/10 mb-3">
-              <FaChartColumn /> Analysis Results
-            </div>
-            <h1 className="text-3xl font-extrabold text-dark-900 dark:text-white">
-              Financial <span className="gradient-text">Deep Dive</span>
-            </h1>
-            {data?.question && (
-              <p className="mt-2 text-dark-400 dark:text-dark-400 max-w-xl">
-                &ldquo;{data.question}&rdquo;
-              </p>
-            )}
-          </div>
-          <button onClick={() => navigate("/product")} className="btn-ghost text-sm whitespace-nowrap">
-            <FaArrowLeft /> New Analysis
-          </button>
-        </div>
-
-    return (
         <div className="min-h-screen bg-[#f8f9ff] font-sans flex flex-col relative overflow-hidden">
             {/* --- Background Elements --- */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200 rounded-full blur-[120px] opacity-30 pointer-events-none"></div>
@@ -338,12 +314,7 @@ export default function Data() {
                         </div>
                     </div>
 
-
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
       </main>
 
       <Footer />
