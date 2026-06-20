@@ -41,6 +41,103 @@ function sanitize(input) {
   return input.replace(/[<>]/g, '').slice(0, 2000);
 }
 
+exports.handleCompare = async (req, res) => {
+  try {
+    const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
+
+    if (!files.length) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    let scenarios;
+    try {
+      scenarios = JSON.parse(req.body.scenarios);
+    } catch {
+      return res.status(400).json({ message: 'Invalid scenarios JSON' });
+    }
+
+    if (!Array.isArray(scenarios) || scenarios.length < 2) {
+      return res.status(400).json({ message: 'At least 2 scenarios required' });
+    }
+
+    for (const s of scenarios) {
+      if (!s.name) s.name = 'Unnamed';
+      if (!s.overrides) s.overrides = {};
+    }
+
+    const uploadedFiles = [];
+
+    for (const file of files) {
+      const fileContent = fs.readFileSync(file.path);
+      const { data, error } = await supabase.storage
+        .from('pdfs')
+        .upload(file.filename, fileContent, { contentType: 'application/pdf', upsert: false });
+
+      if (error) throw error;
+
+      const { data: publicData } = supabase.storage.from('pdfs').getPublicUrl(data.path);
+      uploadedFiles.push({
+        originalName: file.originalname,
+        storedName: file.filename,
+        supabasePath: data.path,
+        publicUrl: publicData.publicUrl,
+      });
+    }
+
+    const { data: fileList, error: listError } = await supabase.storage.from('pdfs').list();
+    if (listError) throw new Error(`Failed to list files: ${listError.message}`);
+
+    if (!fs.existsSync(INPUTS_DIR)) fs.mkdirSync(INPUTS_DIR, { recursive: true });
+
+    for (const file of fileList) {
+      if (file.name === '.emptyFolderPlaceholder') continue;
+      const { data: fileBlob, error: downloadError } = await supabase.storage.from('pdfs').download(file.name);
+      if (downloadError) {
+        logger.error('Download error', { fileName: file.name, error: downloadError.message });
+        continue;
+      }
+      const arrayBuffer = await fileBlob.arrayBuffer();
+      fs.writeFileSync(path.join(INPUTS_DIR, file.name), Buffer.from(arrayBuffer));
+    }
+
+    logger.info('Running PDF Processor...');
+    await runPythonScript(PDF_SCRIPT);
+
+    const scenariosJson = JSON.stringify(scenarios);
+    logger.info('Running Scenario Comparison', { scenarioCount: scenarios.length });
+    const stdout = await runPythonScript(MC_SCRIPT, ['--compare', scenariosJson], { cwd: MC_OUTPUT_DIR });
+
+    let result;
+    try {
+      result = JSON.parse(stdout);
+    } catch {
+      throw new Error('Failed to parse scenario comparison output');
+    }
+
+    const responseData = {
+      scenarios: result.scenario_comparison?.scenarios || [],
+      plot: result.plot ? `data:image/png;base64,${result.plot}` : null,
+      num_simulations: result.scenario_comparison?.num_simulations || 10000,
+    };
+
+    return res.status(200).json({
+      message: 'Scenario comparison completed successfully.',
+      files: uploadedFiles,
+      data: responseData,
+    });
+  } catch (error) {
+    logger.error('Compare handler error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  } finally {
+    fs.readdir(UPLOADS_DIR, (_, entries) => {
+      if (!entries) return;
+      for (const entry of entries) {
+        fs.unlink(path.join(UPLOADS_DIR, entry), () => {});
+      }
+    });
+  }
+};
+
 exports.handleUpload = async (req, res) => {
   try {
     const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
