@@ -14,11 +14,31 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from mc_router import answer_question
+from mc_router import answer_question, answer_scenario_comparison
 from monte_carlo_simulations import run_engine, plot_monte_carlo_bell_curve, OUTPUT_DIR
 
 
+MODE_FLAGS = {"--compare", "-c", "--scenarios"}
+
+
+def is_compare_mode(args: list) -> bool:
+    return any(flag in args for flag in MODE_FLAGS)
+
+
 if __name__ == "__main__":
+    if is_compare_mode(sys.argv[1:]):
+        flag = [a for a in sys.argv[1:] if a in MODE_FLAGS][0]
+        flag_idx = sys.argv.index(flag)
+        scenarios_json = " ".join(sys.argv[flag_idx + 1:])
+        try:
+            scenarios = json.loads(scenarios_json)
+        except json.JSONDecodeError:
+            print(json.dumps({"error": "Invalid scenarios JSON"}, indent=2))
+            sys.exit(1)
+        result = answer_scenario_comparison(scenarios)
+        print(json.dumps(result, indent=2, default=str))
+        sys.exit(0)
+
     if len(sys.argv) > 1:
         question = " ".join(sys.argv[1:])
     else:
