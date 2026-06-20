@@ -12,6 +12,7 @@ import Footer from "./assets/components/Footer";
 import ProductPage from "./pages/ProductPage";
 import Data from "./pages/data";
 import ProcessingPage from "./pages/ProcessingPage";
+import ScenarioPage from "./pages/ScenarioPage";
 
 const Home = () => (
   <>
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/product" element={<ProductPage />} />
           <Route path="/processing" element={<ProcessingPage />} />
           <Route path="/data" element={<Data />} />
+          <Route path="/scenario" element={<ScenarioPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
