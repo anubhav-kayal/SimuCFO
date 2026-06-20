@@ -5,6 +5,8 @@ Connects NLP parsing, Monte Carlo simulations, and LLM interpretation.
 """
 
 import asyncio
+import base64
+import os
 import numpy as np
 import re
 from typing import Dict
@@ -30,6 +32,7 @@ from monte_carlo_simulations import (
     NUM_SIMULATIONS,
     CSV_PATH
 )
+from scenario_comparison import run_scenario_comparison, plot_comparison_chart
 
 
 async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
@@ -449,6 +452,24 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
     comprehensive_response["_plot_metadata"] = plot_metadata
 
     return comprehensive_response
+
+
+def answer_scenario_comparison(scenarios: list, num_sims: int = None) -> Dict:
+    """
+    Run scenario comparison synchronously.
+    scenarios: list of { name: str, overrides: { param: value, ... } }
+    """
+    result = run_scenario_comparison(scenarios, num_sims)
+    plot_path = result.get("plot")
+    plot_base64 = None
+    if plot_path and os.path.exists(plot_path):
+        import base64
+        with open(plot_path, "rb") as f:
+            plot_base64 = base64.b64encode(f.read()).decode()
+    return {
+        "scenario_comparison": result,
+        "plot": plot_base64,
+    }
 
 
 def answer_question(question: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
