@@ -1,6 +1,6 @@
 # SimuCFO — Codebase Review & Remediation Plan
 
-> Generated: 12 June 2026 | Last Updated: 17 June 2026  
+> Generated: 12 June 2026 | Last Updated: 21 June 2026  
 > Scope: Full monorepo audit — PDF extraction, Monte Carlo engine, NLP pipeline, backend API, frontend  
 > Priority: P0 = Critical, P1 = High, P2 = Medium, P3 = Low
 
@@ -27,7 +27,9 @@ SimuCFO is a monorepo virtual CFO application that ingests financial PDFs, extra
 
 **Day 4-6 (14 June) completed:** NLP consolidation (P2-1): merged `nlp.py` → `nlp_pipeline.py` with rule-based primary + Backboard API fallback when confidence < 0.4. MC refactor (P3-1): split 631-line `montecarlo.py` into `mc_router.py` (routing logic) + thin CLI entry point. All changes pushed to `main`.
 
-**Day 6-8 (17 June) completed:** Three feature deliveries — (1) Automated PDF chunking: `detect_statement_type()` classifies content as P&L, Balance Sheet, or Cash Flow; `chunk_pdf_by_statement()` groups tables/text by type; `format_chunked_prompt()` sends a statement-organized prompt to the AI with per-category metric expectations. (2) Data quality scoring: `score_data_quality()` rates each of 29 metrics on a 0-1 scale combinin source quality, extraction method, zero/missing penalties, and cross-field sanity checks; outputs grade A-F. (3) Fan chart visualization: `run_multi_period_simulations()` runs 2000 paths over 8 quarters; `plot_fan_chart()` renders uncertainty bands (40%-90% CI) with median line. All changes pushed to `main` across 15 commits.
+**Day 6-8 (17 June) completed:** Three feature deliveries — (1) Automated PDF chunking: `detect_statement_type()` classifies content as P&L, Balance Sheet, or Cash Flow; `chunk_pdf_by_statement()` groups tables/text by type; `format_chunked_prompt()` sends a statement-organized prompt to the AI with per-category metric expectations. (2) Data quality scoring: `score_data_quality()` rates each of 29 metrics on a 0-1 scale combining source quality, extraction method, zero/missing penalties, and cross-field sanity checks; outputs grade A-F. (3) Fan chart visualization: `run_multi_period_simulations()` runs 2000 paths over 8 quarters; `plot_fan_chart()` renders uncertainty bands (40%-90% CI) with median line. All changes pushed to `main` across 15 commits.
+
+**Day 11 (21 June) completed:** Scenario comparison mode — new `ml-simulator/scenario_comparison.py` module with `apply_overrides()` parameter engine, `run_scenario()`, `run_scenario_comparison()` multi-scenario runner, and `plot_comparison_chart()` grouped bar chart with error bars. Connected via `answer_scenario_comparison()` in `mc_router.py` and `--compare` flag on `montecarlo.py` CLI. Backend exposes `POST /compare` endpoint accepting PDFs + scenarios JSON. Frontend `/scenario` page with scenario builder (sliders for growth, margin, opex, cash conversion), 3 presets (Base/Optimistic/Pessimistic), and results table + chart. All changes pushed to `main` across 8 commits.
 
 ---
 
@@ -45,34 +47,39 @@ SimuCFO is a monorepo virtual CFO application that ingests financial PDFs, extra
 ## Architecture Overview
 
 ```
-Frontend (React 19 + Vite 7 + Tailwind v4)   Backend (Express 5 + Supabase)
-┌────────────────────────────────┐          ┌────────────────────────────────┐
-│  Landing (Hero/About/Services) │  POST    │  uploadController.js           │
-│  Product (Upload + Ask Q)      │  /upload │  → Supabase storage            │
-│  Processing (Step Tracker)     │ ───────> │  → pdfProcessor.py (Python)    │
-│  Data Dashboard (Results)      │          │  → montecarlo.py (Python)      │
-│  Dark/Light Toggle             │          │  → Return JSON + Plot + Text   │
-└────────────────────────────────┘          └────────────────────────────────┘
-                                                    │
-                          ┌─────────────────────────┼────────────────────┐
-                    │                         │                    │
-                    ▼                         ▼                    ▼
-        ┌──────────────────────────┐  ┌───────────────────────────┐ ┌──────────────┐
-        │ data-scripts/            │  │ ml-simulator/             │ │ config/      │
-        │ ├ extractors/            │  │ ├ monte_carlo_            │ │ ├ supabase.js│
-        │ │  └ pdfProcessor.py     │  │ │  simulations.py         │ └──────────────┘
-        │ ├ schema.json            │  │ │  (+ fan chart, multi-   │
-        │ ├ inputs/ (PDFs)         │  │ │   period, meta loaders) │
-        │ └ output/                │  │ ├ mc_router.py            │
-        │   ├ monte_carlo_final    │  │ │  (+ statement_chunks,   │
-        │   │  _data.csv           │  │ │   data_quality, fan     │
-        │   ├ statement_chunks.json│  │ │   chart passthrough)    │
-        │   └ data_quality.json    │  │ ├ montecarlo.py (CLI)     │
-        └──────────────────────────┘  │ ├ nlp_pipeline.py         │
-                                      │ ├ llm_interpreter.py      │
-                                      │ └ *.json / *.png          │
-                                      │   (+ fan_chart_*.png)     │
-                                      └───────────────────────────┘
+Frontend (React 19 + Vite 7 + Tailwind v4)     Backend (Express 5 + Supabase)
+┌──────────────────────────────────┐          ┌────────────────────────────────┐
+│  Landing (Hero/About/Services)   │  POST    │  uploadController.js           │
+│  Product (Upload + Ask Q)        │  /upload │  → Supabase storage            │
+│  Scenario (Builder + Compare)    │  /compare│  → pdfProcessor.py (Python)    │
+│  Processing (Step Tracker)       │ ───────> │  → montecarlo.py (Python)      │
+│  Data Dashboard (Results)        │          │  → scenario_comparison.py      │
+│  Dark/Light Toggle               │          │  → Return JSON + Plot + Text   │
+└──────────────────────────────────┘          └────────────────────────────────┘
+                                                      │
+                            ┌─────────────────────────┼──────────────────────┐
+                      │                         │                      │
+                      ▼                         ▼                      ▼
+          ┌──────────────────────────┐  ┌───────────────────────────┐ ┌──────────────┐
+          │ data-scripts/            │  │ ml-simulator/             │ │ config/      │
+          │ ├ extractors/            │  │ ├ monte_carlo_            │ │ ├ supabase.js│
+          │ │  └ pdfProcessor.py     │  │ │  simulations.py         │ └──────────────┘
+          │ ├ schema.json            │  │ │  (+ fan chart, multi-   │
+          │ ├ inputs/ (PDFs)         │  │ │   period, meta loaders) │
+          │ └ output/                │  │ ├ scenario_comparison.py  │
+          │   ├ monte_carlo_final    │  │ │  (NEW: override engine, │
+          │   │  _data.csv           │  │ │   multi-scenario runner,│
+          │   ├ statement_chunks.json│  │ │   comparison chart)     │
+          │   └ data_quality.json    │  │ ├ mc_router.py            │
+          └──────────────────────────┘  │ │  (+ answer_scenario_    │
+                                        │ │   comparison)           │
+                                        │ ├ montecarlo.py (CLI)     │
+                                        │ │  (+ --compare flag)     │
+                                        │ ├ nlp_pipeline.py         │
+                                        │ ├ llm_interpreter.py      │
+                                        │ └ *.json / *.png          │
+                                        │   (+ fan_chart_*.png)     │
+                                        └───────────────────────────┘
 ```
 
 ---
@@ -108,6 +115,7 @@ Frontend (React 19 + Vite 7 + Tailwind v4)   Backend (Express 5 + Supabase)
 | **F-3** | Fan chart time-series visualization | `ml-simulator/monte_carlo_simulations.py` | ✅ Done — `run_multi_period_simulations()`, `plot_fan_chart()` with confidence bands | main |
 | **F-4** | `data_quality.json` not cleaned up between runs | `data-scripts/extractors/pdfProcessor.py` | ✅ Fixed — stale files cleaned up at start of `main()` | main |
 | **F-5** | Fan chart cwd assumption | `ml-simulator/monte_carlo_simulations.py` | ✅ Fixed — all plot functions save to `OUTPUT_DIR` (ml-simulator/), `montecarlo.py` CLI uses same | main |
+| **F-6** | Scenario comparison mode | `ml-simulator/scenario_comparison.py`, `mc_router.py`, `montecarlo.py`, `uploadController.js`, `ScenarioPage.tsx` | ✅ Done — `apply_overrides()` parameter engine, `run_scenario_comparison()` multi-scenario runner, `plot_comparison_chart()` grouped bar chart, `POST /compare` endpoint, `/scenario` frontend page with builder UI | main |
 
 ---
 
@@ -174,7 +182,6 @@ All sprint issues resolved. See [Extended Feature Ideas](#extended-feature-ideas
 |------|----------|--------|
 | Merge `nlp.py` → `nlp_pipeline.py` (P2-1) | P2 | ✅ Done |
 | Split `montecarlo.py` into CLI + router (P3-1) | P3 | ✅ Done |
-| Scenario comparison mode | Feature | 📅 Planned |
 | Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
 
 ### ✅ Day 6-8 (17 June): Features — Done
@@ -184,8 +191,18 @@ All sprint issues resolved. See [Extended Feature Ideas](#extended-feature-ideas
 | Automated PDF chunking (P&L / Balance Sheet / Cash Flow) | Feature | ✅ Done |
 | Data quality scoring per metric | Feature | ✅ Done |
 | Fan chart time-series visualization | Feature | ✅ Done |
-| Scenario comparison mode | Feature | 📅 Planned |
 | Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
+
+### ✅ Day 11 (21 June): Scenario comparison mode — Done
+
+| Task | Priority | Status |
+|------|----------|--------|
+| Scenario comparison engine (`scenario_comparison.py`) | Feature | ✅ Done — `apply_overrides()`, `run_scenario()`, `run_scenario_comparison()`, `plot_comparison_chart()` with grouped bars + error bars |
+| MC router integration (`mc_router.py`) | Feature | ✅ Done — `answer_scenario_comparison()` with base64 plot encoding |
+| CLI entry point (`montecarlo.py`) | Feature | ✅ Done — `--compare` flag accepts scenarios JSON and prints results |
+| Backend endpoint (`uploadController.js`) | Feature | ✅ Done — `POST /compare` with PDF upload + scenarios JSON, returns comparison data + chart |
+| Frontend page (`ScenarioPage.tsx`) | Feature | ✅ Done — scenario builder with sliders (growth, margin, opex, cash conversion), 3 presets, add/remove scenarios, comparison table + grouped bar chart |
+| Routing + nav | Feature | ✅ Done — `/scenario` route in App.tsx, "Scenario" link in Navbar |
 
 ### ✅ Day 8-10 (19 June): Testing & polish — Done
 
@@ -253,22 +270,23 @@ Beyond the active sprint, these features are candidates for future development:
 
 ## Key Metrics
 
-| Metric | Day 1 Start | Day 2 End | Day 4-6 End | Day 6-8 End | Day 10 End | Target |
-|--------|-------------|-----------|-------------|-------------|-------------|--------|
-| PDF extraction success rate | ~40% (estimated) | ~70% (estimated) | ~70% (estimated) | ~70% (estimated) | ~70% (estimated) | >90% |
-| Hardcoded API keys | 2 (nlp.py + pdfProcessor.py) | 0 | 0 | 0 | 0 | 0 |
-| End-to-end pipeline success | Fails (CSV path bug) | Should work | Should work | Should work | ✅ Verified (integration tests) | 95%+ |
-| Input sanitization | None | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | 100% of user inputs |
-| Duplicate NLP modules | 2 (nlp.py + nlp_pipeline.py) | 2 | 1 (consolidated) | 1 | 1 | 1 |
-| `montecarlo.py` size | 624 lines | 624 lines | ~80 lines (CLI only) | ~80 lines (CLI only) | ~80 lines (CLI only) | <100 |
-| PDF statement chunking | None | None | None | ✅ `detect_statement_type()` + chunked prompts | ✅ | Automatic |
-| Data quality scoring | None | None | None | ✅ Per-metric 0-1 score + A-F grade | ✅ (stale files auto-cleaned) | Per metric |
-| Fan chart visualization | None | None | None | ✅ Multi-period (8Q) with confidence bands | ✅ (saved to OUTPUT_DIR) | Time-series viz |
-| Query caching | None | None | None | None | ✅ SHA-256 + file-based + 1h TTL | Avoid re-runs |
-| Structured logging | None | None | None | None | ✅ JSON-structured + LOG_LEVEL | Audit trail |
-| Test coverage | 0% | 0% | 0% | 0% | ~72% (66 tests) | >60% |
-| Branches | 1 (main) | 1 (main) | 1 (main) | 1 (main) | 1 (main) | — |
+| Metric | Day 1 Start | Day 2 End | Day 4-6 End | Day 6-8 End | Day 10 End | Day 11 End | Target |
+|--------|-------------|-----------|-------------|-------------|-------------|-------------|--------|
+| PDF extraction success rate | ~40% (estimated) | ~70% (estimated) | ~70% (estimated) | ~70% (estimated) | ~70% (estimated) | ~70% (estimated) | >90% |
+| Hardcoded API keys | 2 (nlp.py + pdfProcessor.py) | 0 | 0 | 0 | 0 | 0 | 0 |
+| End-to-end pipeline success | Fails (CSV path bug) | Should work | Should work | Should work | ✅ Verified (integration tests) | ✅ Verified (integration tests) | 95%+ |
+| Input sanitization | None | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | Strips `<>`, caps 2000 chars | 100% of user inputs |
+| Duplicate NLP modules | 2 (nlp.py + nlp_pipeline.py) | 2 | 1 (consolidated) | 1 | 1 | 1 | 1 |
+| `montecarlo.py` size | 624 lines | 624 lines | ~80 lines (CLI only) | ~80 lines (CLI only) | ~80 lines (CLI only) | ~80 lines (CLI only) | <100 |
+| PDF statement chunking | None | None | None | ✅ `detect_statement_type()` + chunked prompts | ✅ | ✅ | Automatic |
+| Data quality scoring | None | None | None | ✅ Per-metric 0-1 score + A-F grade | ✅ (stale files auto-cleaned) | ✅ | Per metric |
+| Fan chart visualization | None | None | None | ✅ Multi-period (8Q) with confidence bands | ✅ (saved to OUTPUT_DIR) | ✅ | Time-series viz |
+| Scenario comparison | None | None | None | None | None | ✅ 3-panel chart + sliders UI + 12-metric table | What-if analysis |
+| Query caching | None | None | None | None | ✅ SHA-256 + file-based + 1h TTL | ✅ | Avoid re-runs |
+| Structured logging | None | None | None | None | ✅ JSON-structured + LOG_LEVEL | ✅ | Audit trail |
+| Test coverage | 0% | 0% | 0% | 0% | ~72% (66 tests) | ~72% (66 tests) | >60% |
+| Branches | 1 (main) | 1 (main) | 1 (main) | 1 (main) | 1 (main) | 1 (main) | — |
 
 ---
 
-*Status: Active sprint complete — all P0-P3 issues resolved, 66 tests passing. See [Extended Feature Ideas](#extended-feature-ideas) for future development opportunities.*
+*Status: Active sprint complete — all P0-P3 issues resolved + scenario comparison shipped, 66 tests passing. See [Extended Feature Ideas](#extended-feature-ideas) for future development opportunities.*
