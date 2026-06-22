@@ -249,6 +249,7 @@ exports.handleUpload = async (req, res) => {
         reasoning: fullAnalysis.analysis_results?.llm_explanation || 'Analysis completed.',
         statementChunks: fullAnalysis.monte_carlo_simulation?.statement_chunks || null,
         dataQuality: fullAnalysis.monte_carlo_simulation?.data_quality || null,
+        ratioDashboard: fullAnalysis.ratio_dashboard || null,
       };
     } else if (metrics) {
       responseData = {
