@@ -3,6 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { handleUpload, handleCompare } = require('../controllers/uploadController');
+const { handleAsk } = require('../controllers/askController');
 
 const router = express.Router();
 
@@ -44,6 +45,8 @@ router.post('/upload', upload.array('pdfFile', 10), (err, req, res, next) => {
   }
   next();
 }, handleUpload);
+
+router.post('/ask', handleAsk);
 
 router.post('/compare', upload.array('pdfFile', 10), (err, req, res, next) => {
   if (err) {
