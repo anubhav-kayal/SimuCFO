@@ -33,6 +33,7 @@ from monte_carlo_simulations import (
     CSV_PATH
 )
 from scenario_comparison import run_scenario_comparison, plot_comparison_chart
+from ratio_dashboard import compute_ratios
 
 
 async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
@@ -98,6 +99,9 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
     base = derive_historical_metrics(df)
     dists = build_distributions(base)
     sim_data = run_monte_carlo_simulations(base, dists)
+
+    # Compute ratio dashboard
+    ratio_dashboard = compute_ratios(base, sim_data, df)
 
     # Step 4: Extract metrics from NLP parsing result (rule-based or API fallback)
     nlp_analysis = nlp_result.get("nlp_analysis", {})
@@ -378,6 +382,7 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
                 "note": note
             }
         },
+        "ratio_dashboard": ratio_dashboard,
         "raw_data": {
             "revenue_statistics": mc_facts["statistics"]["revenue"],
             "cash_statistics": mc_facts["statistics"]["cash"],
