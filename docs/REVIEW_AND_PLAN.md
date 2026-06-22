@@ -1,6 +1,6 @@
 # SimuCFO — Codebase Review & Remediation Plan
 
-> Generated: 12 June 2026 | Last Updated: 21 June 2026  
+> Generated: 12 June 2026 | Last Updated: 23 June 2026  
 > Scope: Full monorepo audit — PDF extraction, Monte Carlo engine, NLP pipeline, backend API, frontend  
 > Priority: P0 = Critical, P1 = High, P2 = Medium, P3 = Low
 
@@ -204,6 +204,17 @@ All sprint issues resolved. See [Extended Feature Ideas](#extended-feature-ideas
 | Frontend page (`ScenarioPage.tsx`) | Feature | ✅ Done — scenario builder with sliders (growth, margin, opex, cash conversion), 3 presets, add/remove scenarios, comparison table + grouped bar chart |
 | Routing + nav | Feature | ✅ Done — `/scenario` route in App.tsx, "Scenario" link in Navbar |
 
+### ✅ Day 12 (23 June): Ratio Analysis Dashboard — Done
+
+| Task | Priority | Status |
+|------|----------|--------|
+| Ratio computation engine (`ratio_dashboard.py`) | Feature | ✅ Done — `compute_ratios()` with 13 financial ratios across 4 categories: Profitability (5), Liquidity (3), Solvency (3), Efficiency (2); health scores 0-100 based on standard financial norms; risk labels (low/medium/high); simulated distributions (P5/P25/P50/P75/P95) from MC paths |
+| MC router integration | Feature | ✅ Done — `compute_ratios(base, sim_data, df)` called in `answer_question_async()`, included in `comprehensive_response` |
+| Backend forwarding | Feature | ✅ Done — `ratioDashboard` field read from `monte_carlo_analysis.json` and passed in API response |
+| Frontend page (`RatioDashboard.tsx`) | Feature | ✅ Done — `/ratios` route with overall health gauge, 4 category filter cards, per-ratio SVG gauges, expandable simulated distribution details, risk badges |
+| Data page integration | Feature | ✅ Done — "View Ratios" button on `/data` page navigates with ratio data |
+| Nav + routing | Feature | ✅ Done — "Ratios" link in Navbar, `/ratios` route in App.tsx |
+
 ### ✅ Day 8-10 (19 June): Testing & polish — Done
 
 | Task | Priority | Status |
@@ -226,7 +237,7 @@ Beyond the active sprint, these features are candidates for future development:
 
 | Feature | Description | Effort |
 |---------|-------------|--------|
-| **Ratio Analysis Dashboard** | Auto-compute current ratio, debt-to-equity, ROE, ROA, cash conversion cycle from extracted metrics | Medium |
+| ~~**Ratio Analysis Dashboard**~~ | ~~Auto-compute current ratio, debt-to-equity, ROE, ROA, cash conversion cycle from extracted metrics~~ | ✅ Done |
 | **What-if Scenario Builder** | Interactive UI sliders for growth rate, COGS %, opex — instant re-projection without re-upload | Large |
 | **Multi-company Benchmarking** | Upload multiple companies' financials and compare side-by-side (same metrics, same chart) | Large |
 | **Working Capital Analytics** | Track DSO, DPO, DIO trends with Monte Carlo forecast | Medium |
@@ -289,4 +300,4 @@ Beyond the active sprint, these features are candidates for future development:
 
 ---
 
-*Status: Active sprint complete — all P0-P3 issues resolved + scenario comparison shipped, 66 tests passing. See [Extended Feature Ideas](#extended-feature-ideas) for future development opportunities.*
+*Status: Active sprint complete — all P0-P3 issues resolved + scenario comparison + ratio dashboard shipped, 60 tests passing. See [Extended Feature Ideas](#extended-feature-ideas) for future development opportunities.*

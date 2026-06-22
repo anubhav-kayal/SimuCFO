@@ -13,6 +13,7 @@ import ProductPage from "./pages/ProductPage";
 import Data from "./pages/data";
 import ProcessingPage from "./pages/ProcessingPage";
 import ScenarioPage from "./pages/ScenarioPage";
+import RatioDashboard from "./pages/RatioDashboard";
 
 const Home = () => (
   <>
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/processing" element={<ProcessingPage />} />
           <Route path="/data" element={<Data />} />
           <Route path="/scenario" element={<ScenarioPage />} />
+          <Route path="/ratios" element={<RatioDashboard />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
