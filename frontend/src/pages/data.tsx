@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../assets/components/Navbar";
 import Footer from "../assets/components/Footer";
-import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaTriangleExclamation, FaChartColumn, FaFileLines } from "react-icons/fa6";
+import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaTriangleExclamation, FaChartColumn, FaFileLines, FaScaleBalanced } from "react-icons/fa6";
 
 function formatKey(k: string) {
   return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -31,6 +31,7 @@ export default function Data() {
   const [statementChunks, setStatementChunks] = useState<any>(null);
   const [dataQuality, setDataQuality] = useState<any>(null);
   const [fanCharts, setFanCharts] = useState<any>(null);
+  const [ratioDashboard, setRatioDashboard] = useState<any>(null);
 
   useEffect(() => {
     if (location.state?.data) {
@@ -41,6 +42,7 @@ export default function Data() {
       if (d.statementChunks) setStatementChunks(d.statementChunks);
       if (d.dataQuality) setDataQuality(d.dataQuality);
       if (d.fanCharts) setFanCharts(d.fanCharts);
+      if (d.ratioDashboard) setRatioDashboard(d.ratioDashboard);
     }
   }, [location.state]);
 
@@ -82,12 +84,22 @@ export default function Data() {
                             </p>
                         </div>
 
-                        <button
+                        <div className="flex gap-3">
+                          {ratioDashboard && (
+                            <button
+                              onClick={() => navigate('/ratios', { state: { ratioDashboard, question: metricsData?.question } })}
+                              className="bg-[#8c52ff] text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                            >
+                              <FaScaleBalanced /> View Ratios
+                            </button>
+                          )}
+                          <button
                             onClick={() => navigate('/product')}
                             className="bg-white border-2 border-[#8c52ff] text-[#8c52ff] px-8 py-3 rounded-full font-bold text-lg hover:bg-purple-50 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-                        >
+                          >
                             <FaArrowLeft /> New Scan
-                        </button>
+                          </button>
+                        </div>
                     </div>
 
                     {/* Main Layout - Vertical Stack */}
