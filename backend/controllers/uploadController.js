@@ -6,6 +6,7 @@ const exec = util.promisify(require('child_process').exec);
 const { rm } = require('fs/promises');
 const cache = require('../utils/cache');
 const logger = require('../utils/logger');
+const sessionStore = require('../utils/sessionStore');
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const INPUTS_DIR = path.join(__dirname, '..', '..', 'data-scripts', 'inputs');
@@ -282,9 +283,21 @@ exports.handleUpload = async (req, res) => {
 
     cache.set(cacheKey, responseData);
 
+    const sessionId = sessionStore.create({
+      question: finalQuestion,
+      files: uploadedFiles,
+      conversation: [
+        { role: 'user', content: finalQuestion },
+        { role: 'assistant', content: responseData.reasoning || '' },
+      ],
+      monteCarloFacts: fullAnalysis?.monte_carlo_facts || null,
+      ratioDashboard: responseData.ratioDashboard || null,
+    });
+
     return res.status(200).json({
       message: 'Analysis completed successfully.',
       files: uploadedFiles,
+      sessionId,
       data: responseData,
     });
   } catch (error) {
