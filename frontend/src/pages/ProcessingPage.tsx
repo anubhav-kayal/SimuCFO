@@ -44,7 +44,7 @@ export default function ProcessingPage() {
         if (res.ok) {
           const json = await res.json();
           setStatus("Complete!");
-          setTimeout(() => navigate("/data", { state: { data: json.data } }), 800);
+          setTimeout(() => navigate("/data", { state: { data: json.data, sessionId: json.sessionId } }), 800);
         } else {
           setStatus("Analysis failed. Redirecting...");
           setTimeout(() => navigate("/product", { replace: true }), 2500);
