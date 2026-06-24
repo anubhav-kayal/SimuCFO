@@ -182,7 +182,7 @@ All sprint issues resolved. See [Extended Feature Ideas](#extended-feature-ideas
 |------|----------|--------|
 | Merge `nlp.py` → `nlp_pipeline.py` (P2-1) | P2 | ✅ Done |
 | Split `montecarlo.py` into CLI + router (P3-1) | P3 | ✅ Done |
-| Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
+| Sensitivity analysis (tornado chart) | Feature | ✅ Done |
 
 ### ✅ Day 6-8 (17 June): Features — Done
 
@@ -191,7 +191,7 @@ All sprint issues resolved. See [Extended Feature Ideas](#extended-feature-ideas
 | Automated PDF chunking (P&L / Balance Sheet / Cash Flow) | Feature | ✅ Done |
 | Data quality scoring per metric | Feature | ✅ Done |
 | Fan chart time-series visualization | Feature | ✅ Done |
-| Sensitivity analysis (tornado chart) | Feature | 📅 Planned |
+| Sensitivity analysis (tornado chart) | Feature | ✅ Done |
 
 ### ✅ Day 11 (21 June): Scenario comparison mode — Done
 

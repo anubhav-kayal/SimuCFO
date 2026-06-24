@@ -165,8 +165,8 @@ Upload PDF files with a financial question.
 | P0 | Hardcoded API key → env var | ✅ Done |
 | P1 | Backend timeouts & size limits | ✅ Done |
 | P1 | Dark/light mode UI | ✅ Done |
-| P2 | Scenario comparison mode | 🔄 In progress |
-| P2 | Sensitivity analysis (tornado charts) | 📅 Planned |
+| P2 | Scenario comparison mode | ✅ Done |
+| P2 | Sensitivity analysis (tornado charts) | ✅ Done |
 | P2 | Data quality scoring per metric | 📅 Planned |
 | P3 | Unit tests | 📅 Planned |
 | P3 | Query caching | 📅 Planned |
