@@ -139,6 +139,93 @@ exports.handleCompare = async (req, res) => {
   }
 };
 
+exports.handleSensitivity = async (req, res) => {
+  try {
+    const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
+
+    if (!files.length) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const uploadedFiles = [];
+
+    for (const file of files) {
+      const fileContent = fs.readFileSync(file.path);
+      const { data, error } = await supabase.storage
+        .from('pdfs')
+        .upload(file.filename, fileContent, { contentType: 'application/pdf', upsert: false });
+
+      if (error) throw error;
+
+      const { data: publicData } = supabase.storage.from('pdfs').getPublicUrl(data.path);
+      uploadedFiles.push({
+        originalName: file.originalname,
+        storedName: file.filename,
+        supabasePath: data.path,
+        publicUrl: publicData.publicUrl,
+      });
+    }
+
+    const { data: fileList, error: listError } = await supabase.storage.from('pdfs').list();
+    if (listError) throw new Error(`Failed to list files: ${listError.message}`);
+
+    if (!fs.existsSync(INPUTS_DIR)) fs.mkdirSync(INPUTS_DIR, { recursive: true });
+
+    for (const file of fileList) {
+      if (file.name === '.emptyFolderPlaceholder') continue;
+      const { data: fileBlob, error: downloadError } = await supabase.storage.from('pdfs').download(file.name);
+      if (downloadError) {
+        logger.error('Download error', { fileName: file.name, error: downloadError.message });
+        continue;
+      }
+      const arrayBuffer = await fileBlob.arrayBuffer();
+      fs.writeFileSync(path.join(INPUTS_DIR, file.name), Buffer.from(arrayBuffer));
+    }
+
+    logger.info('Running PDF Processor...');
+    await runPythonScript(PDF_SCRIPT);
+
+    logger.info('Running Sensitivity Analysis...');
+    const stdout = await runPythonScript(MC_SCRIPT, ['--sensitivity'], { cwd: MC_OUTPUT_DIR });
+
+    let result;
+    try {
+      result = JSON.parse(stdout);
+    } catch {
+      throw new Error('Failed to parse sensitivity analysis output');
+    }
+
+    const responseData = {
+      sensitivity: result.sensitivity || null,
+      plots: result.plots || {},
+    };
+
+    if (responseData.plots) {
+      for (const [key, val] of Object.entries(responseData.plots)) {
+        if (typeof val === 'string') {
+          responseData.plots[key] = `data:image/png;base64,${val}`;
+        }
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Sensitivity analysis completed successfully.',
+      files: uploadedFiles,
+      data: responseData,
+    });
+  } catch (error) {
+    logger.error('Sensitivity handler error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  } finally {
+    fs.readdir(UPLOADS_DIR, (_, entries) => {
+      if (!entries) return;
+      for (const entry of entries) {
+        fs.unlink(path.join(UPLOADS_DIR, entry), () => {});
+      }
+    });
+  }
+};
+
 exports.handleUpload = async (req, res) => {
   try {
     const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);

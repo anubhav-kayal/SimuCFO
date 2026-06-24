@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { handleUpload, handleCompare } = require('../controllers/uploadController');
+const { handleUpload, handleCompare, handleSensitivity } = require('../controllers/uploadController');
 const { handleAsk } = require('../controllers/askController');
 
 const router = express.Router();
@@ -47,6 +47,19 @@ router.post('/upload', upload.array('pdfFile', 10), (err, req, res, next) => {
 }, handleUpload);
 
 router.post('/ask', handleAsk);
+
+router.post('/sensitivity', upload.array('pdfFile', 10), (err, req, res, next) => {
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ message: 'File too large. Maximum size is 50MB.' });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(413).json({ message: 'Too many files. Maximum is 10.' });
+    }
+    return res.status(400).json({ message: err.message || 'Upload error' });
+  }
+  next();
+}, handleSensitivity);
 
 router.post('/compare', upload.array('pdfFile', 10), (err, req, res, next) => {
   if (err) {
