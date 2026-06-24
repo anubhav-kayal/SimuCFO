@@ -14,18 +14,28 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from mc_router import answer_question, answer_scenario_comparison
+from mc_router import answer_question, answer_scenario_comparison, answer_sensitivity_analysis
 from monte_carlo_simulations import run_engine, plot_monte_carlo_bell_curve, OUTPUT_DIR
 
 
 MODE_FLAGS = {"--compare", "-c", "--scenarios"}
+SENSITIVITY_FLAGS = {"--sensitivity", "-s"}
 
 
 def is_compare_mode(args: list) -> bool:
     return any(flag in args for flag in MODE_FLAGS)
 
 
+def is_sensitivity_mode(args: list) -> bool:
+    return any(flag in args for flag in SENSITIVITY_FLAGS)
+
+
 if __name__ == "__main__":
+    if is_sensitivity_mode(sys.argv[1:]):
+        result = answer_sensitivity_analysis()
+        print(json.dumps(result, indent=2, default=str))
+        sys.exit(0)
+
     if is_compare_mode(sys.argv[1:]):
         flag = [a for a in sys.argv[1:] if a in MODE_FLAGS][0]
         flag_idx = sys.argv.index(flag)

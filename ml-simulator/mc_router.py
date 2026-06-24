@@ -34,6 +34,7 @@ from monte_carlo_simulations import (
 )
 from scenario_comparison import run_scenario_comparison, plot_comparison_chart
 from ratio_dashboard import compute_ratios
+from sensitivity_analysis import run_sensitivity, plot_tornado, plot_tornado_absolute
 
 
 async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
@@ -474,6 +475,33 @@ def answer_scenario_comparison(scenarios: list, num_sims: int = None) -> Dict:
     return {
         "scenario_comparison": result,
         "plot": plot_base64,
+    }
+
+
+def answer_sensitivity_analysis(num_sims: int = None) -> Dict:
+    """
+    Run sensitivity analysis synchronously.
+    Returns tornado data + base64-encoded plots for each metric.
+    """
+    df = load_financials(CSV_PATH)
+    base = derive_historical_metrics(df)
+    dists = build_distributions(base)
+    result = run_sensitivity(base, dists, num_sims)
+
+    plots = {}
+    for metric in ["median_cash", "median_revenue", "prob_cash_negative"]:
+        rel_path = plot_tornado(result, metric)
+        abs_path = plot_tornado_absolute(result, metric)
+        if rel_path and os.path.exists(rel_path):
+            with open(rel_path, "rb") as f:
+                plots[f"tornado_{metric}"] = base64.b64encode(f.read()).decode()
+        if abs_path and os.path.exists(abs_path):
+            with open(abs_path, "rb") as f:
+                plots[f"tornado_absolute_{metric}"] = base64.b64encode(f.read()).decode()
+
+    return {
+        "sensitivity": result,
+        "plots": plots,
     }
 
 
