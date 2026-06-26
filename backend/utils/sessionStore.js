@@ -52,4 +52,18 @@ function cleanup() {
 
 setInterval(cleanup, CLEANUP_INTERVAL_MS);
 
-module.exports = { create, get, update };
+function list() {
+  const now = Date.now();
+  const result = [];
+  for (const [id, session] of sessions) {
+    if (now - session.updatedAt > SESSION_TTL_MS) {
+      sessions.delete(id);
+      continue;
+    }
+    result.push({ id, ...session });
+  }
+  result.sort((a, b) => b.createdAt - a.createdAt);
+  return result;
+}
+
+module.exports = { create, get, update, list };

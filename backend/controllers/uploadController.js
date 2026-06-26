@@ -226,6 +226,110 @@ exports.handleSensitivity = async (req, res) => {
   }
 };
 
+exports.handleBenchmark = async (req, res) => {
+  try {
+    const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
+
+    if (!files.length) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const uploadedFiles = [];
+
+    for (const file of files) {
+      const fileContent = fs.readFileSync(file.path);
+      const { data, error } = await supabase.storage
+        .from('pdfs')
+        .upload(file.filename, fileContent, { contentType: 'application/pdf', upsert: false });
+      if (error) throw error;
+      const { data: publicData } = supabase.storage.from('pdfs').getPublicUrl(data.path);
+      uploadedFiles.push({
+        originalName: file.originalname,
+        storedName: file.filename,
+        supabasePath: data.path,
+        publicUrl: publicData.publicUrl,
+      });
+    }
+
+    const { data: fileList, error: listError } = await supabase.storage.from('pdfs').list();
+    if (listError) throw new Error(`Failed to list files: ${listError.message}`);
+
+    if (!fs.existsSync(INPUTS_DIR)) fs.mkdirSync(INPUTS_DIR, { recursive: true });
+
+    for (const file of fileList) {
+      if (file.name === '.emptyFolderPlaceholder') continue;
+      const { data: fileBlob, error: downloadError } = await supabase.storage.from('pdfs').download(file.name);
+      if (downloadError) {
+        logger.error('Download error', { fileName: file.name, error: downloadError.message });
+        continue;
+      }
+      const arrayBuffer = await fileBlob.arrayBuffer();
+      fs.writeFileSync(path.join(INPUTS_DIR, file.name), Buffer.from(arrayBuffer));
+    }
+
+    logger.info('Running PDF Processor for benchmarking...');
+    await runPythonScript(PDF_SCRIPT);
+
+    const outputDir = path.join(__dirname, '..', '..', 'data-scripts', 'output');
+    const csvFiles = fs.readdirSync(outputDir).filter(f => f.endsWith('.csv') && f !== 'monte_carlo_final_data.csv');
+
+    let companies = [];
+    const mainCsv = path.join(outputDir, 'monte_carlo_final_data.csv');
+    if (fs.existsSync(mainCsv)) {
+      companies.push({ label: uploadedFiles[0]?.originalName?.replace('.pdf', '') || 'Company', csv_path: mainCsv });
+    }
+    for (const csvFile of csvFiles) {
+      const fullPath = path.join(outputDir, csvFile);
+      const label = csvFile.replace('.csv', '').replace(/_/g, ' ');
+      companies.push({ label, csv_path: fullPath });
+    }
+
+    const apiUrl = path.join(__dirname, '..', '..', 'ml-simulator', 'benchmarking.py');
+    const companiesJson = JSON.stringify(companies);
+    const command = `"${VENV_PYTHON}" -c "import sys; sys.path.insert(0, '${path.join(__dirname, '..', '..', 'ml-simulator')}'); from benchmarking import run_benchmarking; import json; print(json.dumps(run_benchmarking(json.loads('${companiesJson.replace(/'/g, "'\\''")}')), indent=2, default=str))"`;
+
+    const { stdout, stderr } = await exec(command, { timeout: EXEC_TIMEOUT_MS, cwd: path.join(__dirname, '..', '..', 'ml-simulator') });
+    if (stderr) logger.warn('Benchmarking stderr', { stderr });
+
+    let result;
+    try {
+      result = JSON.parse(stdout);
+    } catch {
+      throw new Error('Failed to parse benchmarking output');
+    }
+
+    const responseData = {
+      companies: result.companies || [],
+      summary: result.summary || [],
+      charts: {},
+    };
+
+    if (result.charts) {
+      for (const [key, filePath] of Object.entries(result.charts)) {
+        if (filePath && fs.existsSync(filePath)) {
+          responseData.charts[key] = `data:image/png;base64,${fs.readFileSync(filePath, 'base64')}`;
+        }
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Benchmarking completed successfully.',
+      files: uploadedFiles,
+      data: responseData,
+    });
+  } catch (error) {
+    logger.error('Benchmark handler error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  } finally {
+    fs.readdir(UPLOADS_DIR, (_, entries) => {
+      if (!entries) return;
+      for (const entry of entries) {
+        fs.unlink(path.join(UPLOADS_DIR, entry), () => {});
+      }
+    });
+  }
+};
+
 exports.handleUpload = async (req, res) => {
   try {
     const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
@@ -338,6 +442,7 @@ exports.handleUpload = async (req, res) => {
         statementChunks: fullAnalysis.monte_carlo_simulation?.statement_chunks || null,
         dataQuality: fullAnalysis.monte_carlo_simulation?.data_quality || null,
         ratioDashboard: fullAnalysis.ratio_dashboard || null,
+        anomalyDetection: fullAnalysis.anomaly_detection || null,
       };
     } else if (metrics) {
       responseData = {
@@ -379,6 +484,7 @@ exports.handleUpload = async (req, res) => {
       ],
       monteCarloFacts: fullAnalysis?.monte_carlo_facts || null,
       ratioDashboard: responseData.ratioDashboard || null,
+      anomalyDetection: responseData.anomalyDetection || null,
     });
 
     return res.status(200).json({

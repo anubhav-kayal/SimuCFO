@@ -97,6 +97,44 @@ exports.handleAsk = async (req, res) => {
   }
 };
 
+exports.handleSessions = async (req, res) => {
+  try {
+    const allSessions = sessionStore.list();
+    const sessionList = allSessions.map(s => ({
+      sessionId: s.id,
+      question: s.data.question || '',
+      files: (s.data.files || []).map(f => f.originalName),
+      createdAt: s.createdAt,
+      messageCount: (s.data.conversation || []).length,
+    }));
+    return res.status(200).json({ sessions: sessionList });
+  } catch (error) {
+    logger.error('List sessions error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.handleGetSession = async (req, res) => {
+  try {
+    const session = sessionStore.get(req.params.id);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found or expired' });
+    }
+    return res.status(200).json({
+      session: {
+        question: session.question || '',
+        files: session.files || [],
+        conversation: session.conversation || [],
+        monteCarloFacts: session.monteCarloFacts || null,
+        ratioDashboard: session.ratioDashboard || null,
+      },
+    });
+  } catch (error) {
+    logger.error('Get session error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 function readJsonIfExists(filePath) {
   if (fs.existsSync(filePath)) {
     try {
