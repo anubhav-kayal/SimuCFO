@@ -87,11 +87,11 @@ class TestScoreDataQuality:
         assert result["revenue_total"]["score"] < 1.0
         assert "ocr_scanned" in result["revenue_total"]["flags"]
 
-    def test_zero_value_deduction(self):
+    def test_zero_value_now_allowed(self):
         data = {"period": "FY25-Q1", "revenue_total": 0, "net_income": 200, "total_assets": 5000}
         result = score_data_quality(data, has_structured_tables=True)
-        assert result["revenue_total"]["score"] <= 0.3
-        assert "zero_value" in result["revenue_total"]["flags"]
+        # Zero is no longer penalized — prompt now uses empty for missing
+        assert result["revenue_total"]["score"] >= 0.5
 
     def test_negative_cash_flag(self):
         data = {"period": "FY25-Q1", "cash_end_period": -500, "revenue_total": 1000, "net_income": 200, "total_assets": 5000}

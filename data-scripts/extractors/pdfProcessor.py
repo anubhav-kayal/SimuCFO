@@ -237,9 +237,9 @@ Data:
 INSTRUCTIONS:
 1. Extract ALL metrics for the period: "{detected_period}".
 2. Match each metric to its correct statement category above.
-3. If a metric is missing, use 0 (not N/A).
+3. If a metric is missing, leave value empty (metric_name,). Only use 0 if explicitly zero.
 4. If "gross_profit" is missing, calculate: revenue_total - cost_of_revenue.
-5. Output in CSV format: metric_name,value
+5. Output in CSV format: metric_name,value (one per line, no header row).
 6. Use EXACT metric names from the schema.
 """
     return prompt
@@ -320,6 +320,30 @@ def parse_ai_response(content, detected_period):
     content = re.sub(r"```(?:csv|json|markdown)?", "", content)
     content = re.sub(r"```", "", content).strip()
 
+    # Try JSON format first (handles {metric: value} and {metric: {value: ...}})
+    try:
+        json_match = re.search(r"\{[^{}]*\}", content, re.DOTALL)
+        if json_match:
+            json_data = json.loads(json_match.group(0))
+            for metric, val in json_data.items():
+                if metric in SCHEMA_METRIC_NAMES:
+                    if isinstance(val, dict) and "value" in val:
+                        val = val["value"]
+                    try:
+                        if isinstance(val, str):
+                            cleaned = re.sub(r"[^0-9.eE\-+]", "", val)
+                            if cleaned and cleaned not in ("-", "."):
+                                data[metric] = float(cleaned)
+                        elif isinstance(val, (int, float)):
+                            data[metric] = float(val)
+                    except (ValueError, TypeError):
+                        pass
+            if len(data) > 1:
+                return data
+    except Exception:
+        pass
+
+    # Try CSV format (metric,value or metric value)
     try:
         f = io.StringIO(content)
         reader = csv.reader(f)
@@ -327,53 +351,35 @@ def parse_ai_response(content, detected_period):
             if len(row) >= 2:
                 metric = row[0].strip()
                 val = row[1].strip()
-                val = re.sub(r"[^0-9.-]", "", val)
-                if not val or val == "-":
-                    val = "0"
-                try:
-                    float_val = float(val)
-                    if metric in SCHEMA_METRIC_NAMES:
-                        data[metric] = float_val
-                except ValueError:
+                if not val or val in ("-", "N/A", "NA", "none", "None", "null"):
                     continue
+                cleaned = re.sub(r"[^0-9.eE\-+]", "", val)
+                if cleaned and cleaned not in ("-", "."):
+                    try:
+                        if metric in SCHEMA_METRIC_NAMES:
+                            data[metric] = float(cleaned)
+                    except ValueError:
+                        continue
         if len(data) > 1:
             return data
     except Exception:
         pass
 
-    try:
-        json_match = re.search(r"\{[^{}]*\}", content, re.DOTALL)
-        if json_match:
-            json_data = json.loads(json_match.group(0))
-            for metric, val in json_data.items():
-                if metric in SCHEMA_METRIC_NAMES:
-                    try:
-                        if isinstance(val, str):
-                            val = re.sub(r"[^0-9.-]", "", val)
-                            val = float(val) if val else 0.0
-                        data[metric] = float(val)
-                    except (ValueError, TypeError):
-                        data[metric] = 0.0
-            if len(data) > 1:
-                return data
-    except Exception:
-        pass
-
+    # Try line-by-line key:value format
     try:
         lines = content.split("\n")
         for line in lines:
-            match = re.match(r"([a-z_]+)[\s:,]+([0-9.,\-]+)", line.lower().strip())
+            match = re.match(r"([a-z_]+)[\s:,;=]+([0-9.,\-eE+]+)", line.lower().strip())
             if match:
                 metric = match.group(1).strip()
                 val = match.group(2).strip()
-                val = re.sub(r"[^0-9.-]", "", val)
-                if not val:
-                    val = "0"
-                try:
-                    if metric in SCHEMA_METRIC_NAMES:
-                        data[metric] = float(val)
-                except ValueError:
-                    continue
+                cleaned = re.sub(r"[^0-9.eE\-+]", "", val)
+                if cleaned and cleaned not in ("-", "."):
+                    try:
+                        if metric in SCHEMA_METRIC_NAMES:
+                            data[metric] = float(cleaned)
+                    except ValueError:
+                        continue
         if len(data) > 1:
             return data
     except Exception:
@@ -391,8 +397,9 @@ async def call_with_retry(client, pdf_path, filtered_context, detected_period, s
 
     RULES:
     1. Convert "Lakhs" (*100,000) or "Crores" (*10,000,000) to absolute integers.
-    2. If a metric is missing, return 0. Do NOT use N/A, null, or empty.
-    3. Output CSV format: metric_name,value (one per line).
+    2. If a metric is truly missing from the document, write: metric_name, (leave value empty).
+       Only write metric_name,0 if the document explicitly states the value is zero.
+    3. Output CSV format: metric_name,value (one per line, no header row).
     4. Use EXACT metric names from the schema provided.
     """
 
@@ -416,9 +423,10 @@ async def call_with_retry(client, pdf_path, filtered_context, detected_period, s
 
         INSTRUCTIONS:
         1. Extract ALL metrics for the period: "{detected_period}".
-        2. If a metric is missing, use 0 (not N/A).
+        2. If a metric is missing, leave the value empty (metric_name,).
+           Only write metric_name,0 if the document says the value is explicitly zero.
         3. If "gross_profit" is missing, calculate: revenue_total - cost_of_revenue.
-        4. Output in CSV format: metric_name,value
+        4. Output in CSV format: metric_name,value (one per line, no header).
         5. Use EXACT metric names from the schema.
         """
 
@@ -545,9 +553,13 @@ def validate_extracted_data(data):
     has_metrics = any(m in data for m in SCHEMA_METRIC_NAMES)
     if not has_metrics:
         return False
-    key_metrics = ["revenue_total", "net_income", "total_assets"]
-    has_non_zero = any(data.get(m, 0) != 0 for m in key_metrics)
-    return has_non_zero
+    # At least 3 metrics must be present (period counts as 1)
+    extracted_count = sum(1 for m in SCHEMA_METRIC_NAMES if m in data)
+    if extracted_count < 3:
+        return False
+    key_metrics = ["revenue_total", "net_income", "cash_end_period", "total_assets"]
+    has_any_key = any(data.get(m, 0) != 0 for m in key_metrics)
+    return has_any_key
 
 
 # ── Data Quality Scoring ──────────────────────────────────────
@@ -623,10 +635,7 @@ def score_data_quality(data: dict, is_scanned: bool = False, has_structured_tabl
                 if derived:
                     score *= 0.6
                     flags.append("derived_calculated")
-        if value == 0:
-            score *= 0.3
-            flags.append("zero_value")
-        elif value is None:
+        if value is None:
             score = 0.0
             flags.append("missing")
         if value is not None and value != 0:
@@ -686,7 +695,7 @@ def save_to_csv(results, chunks=None, quality_data=None):
 
     df["gross_profit"] = df.apply(
         lambda row: row["revenue_total"] - row["cost_of_revenue"]
-        if row["gross_profit"] == 0 and row["revenue_total"] != 0 and row["cost_of_revenue"] != 0
+        if (row["gross_profit"] == 0 or pd.isna(row["gross_profit"])) and row["revenue_total"] != 0 and row["cost_of_revenue"] != 0
         else row["gross_profit"],
         axis=1,
     )
@@ -696,12 +705,17 @@ def save_to_csv(results, chunks=None, quality_data=None):
             + row["selling_marketing_expense"]
             + row["general_admin_expense"]
         )
-        if row["operating_expenses_total"] == 0
+        if (row["operating_expenses_total"] == 0 or pd.isna(row["operating_expenses_total"]))
         else row["operating_expenses_total"],
         axis=1,
     )
 
     df = df[columns]
+
+    # Fill missing values with 0 for downstream MC engine compatibility
+    for col in columns:
+        if col != "period":
+            df[col] = df[col].fillna(0.0)
 
     # Sort periods chronologically; push "Unknown Period" to end
     df["_sort_key"] = df["period"].apply(
