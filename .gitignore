@@ -69,7 +69,9 @@ ENV/
 *.tmp
 *.temp
 .cache/
-backend/cache/
+backend/cache/*
+!backend/cache/.gitkeep
+backend/sessions/
 *.pdf
 
 # =========================
