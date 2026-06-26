@@ -20,6 +20,7 @@ from monte_carlo_simulations import run_engine, plot_monte_carlo_bell_curve, OUT
 
 MODE_FLAGS = {"--compare", "-c", "--scenarios"}
 SENSITIVITY_FLAGS = {"--sensitivity", "-s"}
+ANOMALY_FLAGS = {"--anomalies", "-a"}
 
 
 def is_compare_mode(args: list) -> bool:
@@ -30,7 +31,17 @@ def is_sensitivity_mode(args: list) -> bool:
     return any(flag in args for flag in SENSITIVITY_FLAGS)
 
 
+def is_anomaly_mode(args: list) -> bool:
+    return any(flag in args for flag in ANOMALY_FLAGS)
+
+
 if __name__ == "__main__":
+    if is_anomaly_mode(sys.argv[1:]):
+        from anomaly_detection import run_anomaly_detection
+        result = run_anomaly_detection()
+        print(json.dumps(result, indent=2, default=str))
+        sys.exit(0)
+
     if is_sensitivity_mode(sys.argv[1:]):
         result = answer_sensitivity_analysis()
         print(json.dumps(result, indent=2, default=str))
