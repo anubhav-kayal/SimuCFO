@@ -114,6 +114,19 @@ exports.handleSessions = async (req, res) => {
   }
 };
 
+exports.handleDeleteSession = async (req, res) => {
+  try {
+    const deleted = sessionStore.remove(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    return res.status(200).json({ message: 'Session deleted' });
+  } catch (error) {
+    logger.error('Delete session error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.handleGetSession = async (req, res) => {
   try {
     const session = sessionStore.get(req.params.id);

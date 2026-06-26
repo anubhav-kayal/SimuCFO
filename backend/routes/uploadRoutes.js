@@ -3,7 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { handleUpload, handleCompare, handleSensitivity, handleBenchmark } = require('../controllers/uploadController');
-const { handleAsk, handleSessions, handleGetSession } = require('../controllers/askController');
+const { handleAsk, handleSessions, handleGetSession, handleDeleteSession } = require('../controllers/askController');
 
 const router = express.Router();
 
@@ -89,5 +89,6 @@ router.post('/benchmark', upload.array('pdfFile', 10), (err, req, res, next) => 
 
 router.get('/sessions', handleSessions);
 router.get('/sessions/:id', handleGetSession);
+router.delete('/sessions/:id', handleDeleteSession);
 
 module.exports = router;
