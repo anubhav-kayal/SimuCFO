@@ -284,12 +284,17 @@ exports.handleBenchmark = async (req, res) => {
       companies.push({ label, csv_path: fullPath });
     }
 
-    const apiUrl = path.join(__dirname, '..', '..', 'ml-simulator', 'benchmarking.py');
-    const companiesJson = JSON.stringify(companies);
-    const command = `"${VENV_PYTHON}" -c "import sys; sys.path.insert(0, '${path.join(__dirname, '..', '..', 'ml-simulator')}'); from benchmarking import run_benchmarking; import json; print(json.dumps(run_benchmarking(json.loads('${companiesJson.replace(/'/g, "'\\''")}')), indent=2, default=str))"`;
+    // Write companies JSON to temp file, pass via --file flag (avoids shell escaping issues)
+    const benchmarkInputDir = path.join(__dirname, '..', 'cache');
+    if (!fs.existsSync(benchmarkInputDir)) fs.mkdirSync(benchmarkInputDir, { recursive: true });
+    const benchmarkInputPath = path.join(benchmarkInputDir, `benchmark_input_${Date.now()}.json`);
+    fs.writeFileSync(benchmarkInputPath, JSON.stringify(companies, null, 2));
 
-    const { stdout, stderr } = await exec(command, { timeout: EXEC_TIMEOUT_MS, cwd: path.join(__dirname, '..', '..', 'ml-simulator') });
-    if (stderr) logger.warn('Benchmarking stderr', { stderr });
+    const BENCHMARK_SCRIPT = path.join(__dirname, '..', '..', 'ml-simulator', 'benchmarking.py');
+    const stdout = await runPythonScript(BENCHMARK_SCRIPT, ['--file', benchmarkInputPath], { cwd: path.join(__dirname, '..', '..', 'ml-simulator') });
+
+    // Clean up temp file
+    fs.unlink(benchmarkInputPath, () => {});
 
     let result;
     try {

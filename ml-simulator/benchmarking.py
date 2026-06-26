@@ -265,9 +265,24 @@ def run_benchmarking_cli(companies_json: str) -> str:
 
 
 if __name__ == "__main__":
-    sample = [
-        {"label": "Company A", "csv_path": CSV_PATH},
-        {"label": "Company B", "csv_path": CSV_PATH},
-    ]
-    result = run_benchmarking(sample)
-    print(json.dumps(result, indent=2, default=str))
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--file" and len(sys.argv) > 2:
+        input_path = sys.argv[2]
+        with open(input_path) as f:
+            companies = json.load(f)
+        result = run_benchmarking(companies)
+        print(json.dumps(result, indent=2, default=str))
+    elif len(sys.argv) > 1:
+        try:
+            companies = json.loads(sys.argv[1])
+        except json.JSONDecodeError:
+            companies = [{"label": "Company A", "csv_path": CSV_PATH}]
+        result = run_benchmarking(companies)
+        print(json.dumps(result, indent=2, default=str))
+    else:
+        sample = [
+            {"label": "Company A", "csv_path": CSV_PATH},
+            {"label": "Company B", "csv_path": CSV_PATH},
+        ]
+        result = run_benchmarking(sample)
+        print(json.dumps(result, indent=2, default=str))
