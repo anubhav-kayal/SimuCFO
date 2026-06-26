@@ -15,6 +15,8 @@ import ProcessingPage from "./pages/ProcessingPage";
 import ScenarioPage from "./pages/ScenarioPage";
 import RatioDashboard from "./pages/RatioDashboard";
 import SensitivityPage from "./pages/SensitivityPage";
+import BenchmarkingPage from "./pages/BenchmarkingPage";
+import ChatHistoryPage from "./pages/ChatHistoryPage";
 
 const Home = () => (
   <>
@@ -41,6 +43,8 @@ export default function App() {
           <Route path="/scenario" element={<ScenarioPage />} />
           <Route path="/ratios" element={<RatioDashboard />} />
           <Route path="/sensitivity" element={<SensitivityPage />} />
+          <Route path="/benchmark" element={<BenchmarkingPage />} />
+          <Route path="/chat" element={<ChatHistoryPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

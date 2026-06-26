@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../assets/components/Navbar";
 import Footer from "../assets/components/Footer";
-import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaFileLines, FaScaleBalanced, FaPaperPlane, FaSpinner } from "react-icons/fa6";
+import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaFileLines, FaScaleBalanced, FaPaperPlane, FaSpinner, FaTriangleExclamation } from "react-icons/fa6";
 
 function formatKey(k: string) {
   return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -18,6 +18,7 @@ export default function Data() {
   const [dataQuality, setDataQuality] = useState<any>(null);
   const [fanCharts, setFanCharts] = useState<any>(null);
   const [ratioDashboard, setRatioDashboard] = useState<any>(null);
+  const [anomalyDetection, setAnomalyDetection] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -34,6 +35,7 @@ export default function Data() {
       if (d.dataQuality) setDataQuality(d.dataQuality);
       if (d.fanCharts) setFanCharts(d.fanCharts);
       if (d.ratioDashboard) setRatioDashboard(d.ratioDashboard);
+      if (d.anomalyDetection) setAnomalyDetection(d.anomalyDetection);
     }
     if (location.state?.sessionId) {
       setSessionId(location.state.sessionId);
@@ -276,7 +278,98 @@ export default function Data() {
               </div>
             )}
 
-            {/* 4. Fan Charts */}
+            {/* 4. Anomaly Detection */}
+            {anomalyDetection && anomalyDetection.summary && (
+              <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`p-2 rounded-lg ${
+                    anomalyDetection.summary.overall_risk === 'high' ? 'bg-red-100 text-red-600' :
+                    anomalyDetection.summary.overall_risk === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                    'bg-green-100 text-green-600'
+                  }`}>
+                    <FaTriangleExclamation />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-800">Anomaly Detection</h2>
+                  <div className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${
+                    anomalyDetection.summary.overall_risk === 'high' ? 'bg-red-100 text-red-700' :
+                    anomalyDetection.summary.overall_risk === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {anomalyDetection.summary.overall_risk.toUpperCase()} Risk
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="text-center p-3 rounded-xl bg-gray-50">
+                    <div className="text-lg font-bold text-gray-800">{anomalyDetection.summary.total_anomalies}</div>
+                    <div className="text-xs text-gray-500">Total Anomalies</div>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-red-50 border border-red-100">
+                    <div className="text-lg font-bold text-red-600">{anomalyDetection.summary.severity_breakdown?.critical || 0}</div>
+                    <div className="text-xs text-red-500">Critical</div>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-orange-50 border border-orange-100">
+                    <div className="text-lg font-bold text-orange-600">{anomalyDetection.summary.severity_breakdown?.high || 0}</div>
+                    <div className="text-xs text-orange-500">High</div>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-blue-50 border border-blue-100">
+                    <div className="text-lg font-bold text-blue-600">{anomalyDetection.summary.severity_breakdown?.medium || 0}</div>
+                    <div className="text-xs text-blue-500">Medium</div>
+                  </div>
+                </div>
+                {anomalyDetection.anomalies && anomalyDetection.anomalies.length > 0 && (
+                  <details>
+                    <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 font-medium">
+                      View {anomalyDetection.anomalies.length} detected anomalies
+                    </summary>
+                    <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+                      {anomalyDetection.anomalies.slice(0, 20).map((a: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl text-sm">
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${
+                            a.severity === 'critical' ? 'bg-red-500' :
+                            a.severity === 'high' ? 'bg-orange-500' : 'bg-yellow-500'
+                          }`} />
+                          <span className="font-mono text-xs font-bold text-gray-700 w-16">
+                            P{a.period_index}
+                          </span>
+                          <span className="text-gray-600 capitalize">{a.metric.replace(/_/g, ' ')}</span>
+                          <span className="ml-auto text-xs font-bold text-gray-500">
+                            {a.direction === 'spike' ? '↑' : '↓'} {Math.abs(a.deviation_pct || 0).toFixed(1)}%
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            a.severity === 'critical' ? 'bg-red-100 text-red-700' :
+                            a.severity === 'high' ? 'bg-orange-100 text-orange-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {a.severity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+                {anomalyDetection.trends && anomalyDetection.trends.length > 0 && (
+                  <details className="mt-3">
+                    <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 font-medium">
+                      View trends across {anomalyDetection.summary.metrics_analyzed} metrics
+                    </summary>
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {anomalyDetection.trends.map((t: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${
+                            t.trend === 'increasing' ? 'bg-green-500' :
+                            t.trend === 'decreasing' ? 'bg-red-500' : 'bg-gray-400'
+                          }`} />
+                          <span className="truncate">{t.metric.replace(/_/g, ' ')}</span>
+                          <span className="ml-auto font-bold">{t.avg_change_pct > 0 ? '+' : ''}{t.avg_change_pct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            )}
+
+            {/* 5. Fan Charts */}
             {fanCharts && (
               <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
                 <div className="flex items-center gap-3 mb-6">
@@ -310,7 +403,7 @@ export default function Data() {
               </div>
             )}
 
-            {/* 5. Probability Distribution */}
+            {/* 6. Probability Distribution */}
             {plot && (
               <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
                 <div className="flex items-center gap-3 mb-6">
@@ -323,7 +416,7 @@ export default function Data() {
               </div>
             )}
 
-            {/* 6. Computed Metrics */}
+            {/* 7. Computed Metrics */}
             <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[30px] border border-white shadow-sm">
               <div className="flex items-center gap-3 mb-8">
                 <div className="p-3 bg-purple-100 rounded-xl text-[#8c52ff]"><FaRobot className="text-xl" /></div>
@@ -348,7 +441,7 @@ export default function Data() {
               </div>
             </div>
 
-            {/* 7. AI Interpretation */}
+            {/* 8. AI Interpretation */}
             <div className="bg-[#1a1a1a] text-white p-8 rounded-[30px] shadow-2xl relative overflow-hidden min-h-[300px] mb-20">
               <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-[#8c52ff] rounded-full blur-[60px] opacity-60"></div>
               <div className="relative z-10">
