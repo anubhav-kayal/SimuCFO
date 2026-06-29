@@ -38,6 +38,7 @@ from sensitivity_analysis import run_sensitivity, plot_tornado, plot_tornado_abs
 from anomaly_detection import run_anomaly_detection
 from what_if_builder import what_if_from_session, run_what_if_comparison, apply_what_if_overrides
 from executive_summary import generate_executive_summary
+from data_validation import run_data_validation
 
 
 async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
@@ -109,6 +110,9 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
 
     # Detect anomalies across periods
     anomaly_result = run_anomaly_detection(CSV_PATH)
+
+    # Validate data quality (coverage, cross-field consistency)
+    data_validation_result = run_data_validation(CSV_PATH)
 
     # Step 4: Extract metrics from NLP parsing result (rule-based or API fallback)
     nlp_analysis = nlp_result.get("nlp_analysis", {})
@@ -392,6 +396,7 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
         },
         "ratio_dashboard": ratio_dashboard,
         "anomaly_detection": anomaly_result,
+        "data_validation": data_validation_result,
         "raw_data": {
             "revenue_statistics": mc_facts["statistics"]["revenue"],
             "cash_statistics": mc_facts["statistics"]["cash"],

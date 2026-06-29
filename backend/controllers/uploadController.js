@@ -506,6 +506,7 @@ exports.handleUpload = async (req, res) => {
         ratioDashboard: fullAnalysis.ratio_dashboard || null,
         anomalyDetection: fullAnalysis.anomaly_detection || null,
         executiveSummary: fullAnalysis.executive_summary || null,
+        dataValidation: fullAnalysis.data_validation || null,
       };
     } else if (metrics) {
       responseData = {

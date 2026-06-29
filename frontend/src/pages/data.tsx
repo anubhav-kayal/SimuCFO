@@ -20,6 +20,7 @@ export default function Data() {
   const [ratioDashboard, setRatioDashboard] = useState<any>(null);
   const [anomalyDetection, setAnomalyDetection] = useState<any>(null);
   const [executiveSummary, setExecutiveSummary] = useState<any>(null);
+  const [dataValidation, setDataValidation] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -38,6 +39,7 @@ export default function Data() {
       if (d.ratioDashboard) setRatioDashboard(d.ratioDashboard);
       if (d.anomalyDetection) setAnomalyDetection(d.anomalyDetection);
       if (d.executiveSummary) setExecutiveSummary(d.executiveSummary);
+      if (d.dataValidation) setDataValidation(d.dataValidation);
     }
     if (location.state?.sessionId) {
       setSessionId(location.state.sessionId);
@@ -269,7 +271,71 @@ export default function Data() {
               </div>
             )}
 
-            {/* 3. Document Structure */}
+            {/* 3. Data Validation */}
+            {dataValidation && dataValidation.status === "ok" && (
+              <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`p-2 rounded-lg ${
+                    dataValidation.overall_severity === "pass" ? "bg-emerald-100 text-emerald-600" :
+                    dataValidation.overall_severity === "low" ? "bg-blue-100 text-blue-600" :
+                    dataValidation.overall_severity === "medium" ? "bg-amber-100 text-amber-600" :
+                    "bg-red-100 text-red-600"
+                  }`}>
+                    <FaChartLine />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-800">Data Validation</h2>
+                  <div className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${
+                    dataValidation.overall_severity === "pass" ? "bg-emerald-100 text-emerald-700" :
+                    dataValidation.overall_severity === "low" ? "bg-blue-100 text-blue-700" :
+                    dataValidation.overall_severity === "medium" ? "bg-amber-100 text-amber-700" :
+                    "bg-red-100 text-red-700"
+                  }`}>
+                    {dataValidation.overall_severity === "pass" ? "All Good" : dataValidation.overall_severity.toUpperCase()}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="text-center p-3 rounded-xl bg-gray-50">
+                    <div className="text-lg font-bold text-gray-800">{dataValidation.num_periods}</div>
+                    <div className="text-xs text-gray-500">Periods</div>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-gray-50">
+                    <div className="text-lg font-bold text-gray-800">{dataValidation.metrics_found}/{dataValidation.metrics_expected}</div>
+                    <div className="text-xs text-gray-500">Metrics Found</div>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-gray-50">
+                    <div className="text-lg font-bold text-gray-800">{dataValidation.coverage_pct}%</div>
+                    <div className="text-xs text-gray-500">Coverage</div>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-gray-50">
+                    <div className="text-lg font-bold text-gray-800">{dataValidation.issues?.length || 0}</div>
+                    <div className="text-xs text-gray-500">Issues</div>
+                  </div>
+                </div>
+                {dataValidation.issues?.length > 0 && (
+                  <details>
+                    <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 font-medium">
+                      View {dataValidation.issues.length} issue{(dataValidation.issues.length !== 1) ? "s" : ""}
+                    </summary>
+                    <div className="mt-3 space-y-2">
+                      {dataValidation.issues.map((iss: any, i: number) => (
+                        <div key={i} className="flex items-start gap-3 bg-gray-50 p-3 rounded-xl text-sm">
+                          <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                            iss.severity === "high" ? "bg-red-500" :
+                            iss.severity === "medium" ? "bg-amber-500" : "bg-blue-500"
+                          }`} />
+                          <div>
+                            <div className="text-gray-700 font-medium">{iss.message}</div>
+                            <div className="text-[10px] text-gray-400 uppercase mt-0.5">{iss.type}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            )}
+
+            {/* 4. Document Structure */}
             {statementChunks && (
               <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
                 <div className="flex items-center gap-3 mb-6">
