@@ -36,6 +36,7 @@ from scenario_comparison import run_scenario_comparison, plot_comparison_chart
 from ratio_dashboard import compute_ratios
 from sensitivity_analysis import run_sensitivity, plot_tornado, plot_tornado_absolute
 from anomaly_detection import run_anomaly_detection
+from what_if_builder import what_if_from_session, run_what_if_comparison, apply_what_if_overrides
 
 
 async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
@@ -508,6 +509,11 @@ def answer_sensitivity_analysis(num_sims: int = None) -> Dict:
         "sensitivity": result,
         "plots": plots,
     }
+
+
+def answer_what_if(base_metrics: dict, overrides: dict, num_sims: int = None) -> Dict:
+    result = what_if_from_session(base_metrics, overrides, num_sims)
+    return result
 
 
 def answer_question(question: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:

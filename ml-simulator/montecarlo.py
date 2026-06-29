@@ -14,13 +14,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from mc_router import answer_question, answer_scenario_comparison, answer_sensitivity_analysis
+from mc_router import answer_question, answer_scenario_comparison, answer_sensitivity_analysis, answer_what_if
 from monte_carlo_simulations import run_engine, plot_monte_carlo_bell_curve, OUTPUT_DIR
 
 
 MODE_FLAGS = {"--compare", "-c", "--scenarios"}
 SENSITIVITY_FLAGS = {"--sensitivity", "-s"}
 ANOMALY_FLAGS = {"--anomalies", "-a"}
+WHATIF_FLAGS = {"--whatif", "-w"}
 
 
 def is_compare_mode(args: list) -> bool:
@@ -35,6 +36,10 @@ def is_anomaly_mode(args: list) -> bool:
     return any(flag in args for flag in ANOMALY_FLAGS)
 
 
+def is_whatif_mode(args: list) -> bool:
+    return any(flag in args for flag in WHATIF_FLAGS)
+
+
 if __name__ == "__main__":
     if is_anomaly_mode(sys.argv[1:]):
         from anomaly_detection import run_anomaly_detection
@@ -44,6 +49,22 @@ if __name__ == "__main__":
 
     if is_sensitivity_mode(sys.argv[1:]):
         result = answer_sensitivity_analysis()
+        print(json.dumps(result, indent=2, default=str))
+        sys.exit(0)
+
+    if is_whatif_mode(sys.argv[1:]):
+        flag = [a for a in sys.argv[1:] if a in WHATIF_FLAGS][0]
+        flag_idx = sys.argv.index(flag)
+        payload = " ".join(sys.argv[flag_idx + 1:])
+        try:
+            parsed = json.loads(payload)
+        except json.JSONDecodeError:
+            print(json.dumps({"error": "Invalid what-if JSON. Expected {base_metrics: ..., overrides: ...}"}, indent=2))
+            sys.exit(1)
+        base_metrics = parsed.get("base_metrics", {})
+        overrides = parsed.get("overrides", {})
+        num_sims = parsed.get("num_simulations", None)
+        result = answer_what_if(base_metrics, overrides, num_sims)
         print(json.dumps(result, indent=2, default=str))
         sys.exit(0)
 
