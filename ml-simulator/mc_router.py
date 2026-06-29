@@ -296,7 +296,8 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
                 "starting_revenue": float(base["revenue"]),
                 "starting_cash": float(base["cash"]),
                 "employee_count": base.get("employee_count", None)
-            }
+            },
+            "_full_derived_metrics": {k: float(v) if isinstance(v, (int, float, np.floating)) and not isinstance(v, bool) else v for k, v in base.items()}
         },
         "computed_results": computed_answer,
         "statistics": {
