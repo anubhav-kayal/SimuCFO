@@ -1,8 +1,10 @@
 # SimuCFO — Codebase Review & Remediation Plan
 
-> Generated: 12 June 2026 | Last Updated: 23 June 2026  
+> Generated: 12 June 2026 | Last Updated: 30 June 2026  
 > Scope: Full monorepo audit — PDF extraction, Monte Carlo engine, NLP pipeline, backend API, frontend  
 > Priority: P0 = Critical, P1 = High, P2 = Medium, P3 = Low
+
+> **Last Session (30 June):** Completed all 4 small-effort features — [Executive Summary](#-aiml) (rule-based findings/risks/opportunities), [Automated Data Validation](#-data-pipeline) (coverage + cross-field checks), [Share by Link](#-ux--product) (7-day tokens, share page), [Docker Compose](#-infrastructure) (one-command deploy). Also shipped the [What-if Scenario Builder](#-financial-analysis) (interactive sliders, `POST /whatif`, `/whatif` page). Next up: medium-effort features — **Working Capital Analytics**, **Automated Report Generation**, **Excel/CSV Ingestion**, or **Export to PPT**.
 
 ---
 
@@ -305,4 +307,4 @@ Beyond the active sprint, these features are candidates for future development:
 
 ---
 
-*Status: Active sprint complete — all P0-P3 issues resolved + scenario comparison + ratio dashboard shipped, 60 tests passing. See [Extended Feature Ideas](#extended-feature-ideas) for future development opportunities.*
+*Status: Active sprint complete — all P0-P3 issues resolved + scenario comparison + ratio dashboard + what-if builder + executive summary + data validation + share by link + docker compose shipped, 39 tests passing. See [Extended Feature Ideas](#extended-feature-ideas) for future development opportunities.*
