@@ -139,6 +139,63 @@ exports.handleCompare = async (req, res) => {
   }
 };
 
+exports.handleWhatIf = async (req, res) => {
+  try {
+    const { sessionId, overrides } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ message: 'sessionId is required' });
+    }
+
+    if (!overrides || typeof overrides !== 'object' || Object.keys(overrides).length === 0) {
+      return res.status(400).json({ message: 'overrides object is required' });
+    }
+
+    const session = sessionStore.get(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found or expired' });
+    }
+
+    const monteCarloFacts = session.monteCarloFacts || {};
+    const derivedMetrics = monteCarloFacts._full_derived_metrics || monteCarloFacts.simulation_metadata?._full_derived_metrics || null;
+
+    if (!derivedMetrics) {
+      return res.status(400).json({ message: 'No base metrics available in session. Please re-upload your PDFs.' });
+    }
+
+    const payload = JSON.stringify({
+      base_metrics: derivedMetrics,
+      overrides: overrides,
+    });
+
+    logger.info('Running What-If projection', { sessionId, overrides: Object.keys(overrides) });
+    const stdout = await runPythonScript(MC_SCRIPT, ['--whatif', payload], { cwd: MC_OUTPUT_DIR });
+
+    let result;
+    try {
+      result = JSON.parse(stdout);
+    } catch {
+      throw new Error('Failed to parse what-if projection output');
+    }
+
+    const responseData = {
+      base: result.base || null,
+      what_if: result.what_if || null,
+      overrides_applied: result.overrides_applied || overrides,
+      num_simulations: result.num_simulations || 5000,
+      plot: result.plot_base64 ? `data:image/png;base64,${result.plot_base64}` : null,
+    };
+
+    return res.status(200).json({
+      message: 'What-if projection completed successfully.',
+      data: responseData,
+    });
+  } catch (error) {
+    logger.error('What-If handler error', { error: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.handleSensitivity = async (req, res) => {
   try {
     const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);

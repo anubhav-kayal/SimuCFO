@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { handleUpload, handleCompare, handleSensitivity, handleBenchmark } = require('../controllers/uploadController');
+const { handleUpload, handleCompare, handleSensitivity, handleBenchmark, handleWhatIf } = require('../controllers/uploadController');
 const { handleAsk, handleSessions, handleGetSession, handleDeleteSession } = require('../controllers/askController');
 
 const router = express.Router();
@@ -73,6 +73,8 @@ router.post('/compare', upload.array('pdfFile', 10), (err, req, res, next) => {
   }
   next();
 }, handleCompare);
+
+router.post('/whatif', handleWhatIf);
 
 router.post('/benchmark', upload.array('pdfFile', 10), (err, req, res, next) => {
   if (err) {
