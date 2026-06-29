@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../assets/components/Navbar";
 import Footer from "../assets/components/Footer";
-import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaFileLines, FaScaleBalanced, FaPaperPlane, FaSpinner, FaTriangleExclamation, FaFlask } from "react-icons/fa6";
+import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaFileLines, FaScaleBalanced, FaPaperPlane, FaSpinner, FaTriangleExclamation, FaFlask, FaShareNodes } from "react-icons/fa6";
 
 function formatKey(k: string) {
   return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -49,6 +49,31 @@ export default function Data() {
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (!sessionId) return;
+    setShareLoading(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setShareUrl(json.shareUrl);
+        await navigator.clipboard.writeText(json.shareUrl);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 3000);
+      }
+    } catch {}
+    setShareLoading(false);
+  };
 
   const sendFollowUp = async () => {
     const q = chatInput.trim();
@@ -160,13 +185,22 @@ export default function Data() {
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               {sessionId && (
                 <button
                   onClick={() => navigate('/whatif', { state: { sessionId } })}
                   className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-emerald-600 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                 >
                   <FaFlask /> What-If
+                </button>
+              )}
+              {sessionId && (
+                <button
+                  onClick={handleShare}
+                  disabled={shareLoading}
+                  className="bg-blue-500 text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-blue-600 transition-all shadow-sm flex items-center gap-2"
+                >
+                  <FaShareNodes /> {shareCopied ? "Copied!" : shareLoading ? "..." : "Share"}
                 </button>
               )}
               {ratioDashboard && (

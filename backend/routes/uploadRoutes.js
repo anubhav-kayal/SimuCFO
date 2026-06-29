@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { handleUpload, handleCompare, handleSensitivity, handleBenchmark, handleWhatIf } = require('../controllers/uploadController');
 const { handleAsk, handleSessions, handleGetSession, handleDeleteSession } = require('../controllers/askController');
+const { handleCreateShare, handleGetShare } = require('../controllers/shareController');
 
 const router = express.Router();
 
@@ -88,6 +89,9 @@ router.post('/benchmark', upload.array('pdfFile', 10), (err, req, res, next) => 
   }
   next();
 }, handleBenchmark);
+
+router.post('/share', handleCreateShare);
+router.get('/share/:token', handleGetShare);
 
 router.get('/sessions', handleSessions);
 router.get('/sessions/:id', handleGetSession);

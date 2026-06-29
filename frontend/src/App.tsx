@@ -18,6 +18,7 @@ import SensitivityPage from "./pages/SensitivityPage";
 import BenchmarkingPage from "./pages/BenchmarkingPage";
 import ChatHistoryPage from "./pages/ChatHistoryPage";
 import WhatIfPage from "./pages/WhatIfPage";
+import ShareViewPage from "./pages/ShareViewPage";
 
 const Home = () => (
   <>
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/benchmark" element={<BenchmarkingPage />} />
           <Route path="/chat" element={<ChatHistoryPage />} />
           <Route path="/whatif" element={<WhatIfPage />} />
+          <Route path="/share/:token" element={<ShareViewPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
