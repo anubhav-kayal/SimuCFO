@@ -17,6 +17,7 @@ import RatioDashboard from "./pages/RatioDashboard";
 import SensitivityPage from "./pages/SensitivityPage";
 import BenchmarkingPage from "./pages/BenchmarkingPage";
 import ChatHistoryPage from "./pages/ChatHistoryPage";
+import WhatIfPage from "./pages/WhatIfPage";
 
 const Home = () => (
   <>
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/sensitivity" element={<SensitivityPage />} />
           <Route path="/benchmark" element={<BenchmarkingPage />} />
           <Route path="/chat" element={<ChatHistoryPage />} />
+          <Route path="/whatif" element={<WhatIfPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

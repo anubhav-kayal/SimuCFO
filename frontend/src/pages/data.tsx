@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../assets/components/Navbar";
 import Footer from "../assets/components/Footer";
-import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaFileLines, FaScaleBalanced, FaPaperPlane, FaSpinner, FaTriangleExclamation } from "react-icons/fa6";
+import { FaArrowLeft, FaChartLine, FaBrain, FaRobot, FaFileLines, FaScaleBalanced, FaPaperPlane, FaSpinner, FaTriangleExclamation, FaFlask } from "react-icons/fa6";
 
 function formatKey(k: string) {
   return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -157,6 +157,14 @@ export default function Data() {
             </div>
 
             <div className="flex gap-3">
+              {sessionId && (
+                <button
+                  onClick={() => navigate('/whatif', { state: { sessionId } })}
+                  className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-emerald-600 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                >
+                  <FaFlask /> What-If
+                </button>
+              )}
               {ratioDashboard && (
                 <button
                   onClick={() => navigate('/ratios', { state: { ratioDashboard, question: questionText } })}
