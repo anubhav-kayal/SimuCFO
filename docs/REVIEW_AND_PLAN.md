@@ -238,7 +238,7 @@ Beyond the active sprint, these features are candidates for future development:
 | Feature | Description | Effort |
 |---------|-------------|--------|
 | ~~**Ratio Analysis Dashboard**~~ | ~~Auto-compute current ratio, debt-to-equity, ROE, ROA, cash conversion cycle from extracted metrics~~ | ✅ Done |
-| **What-if Scenario Builder** | Interactive UI sliders for growth rate, COGS %, opex — instant re-projection without re-upload | Large |
+| ~~**What-if Scenario Builder**~~ | ~~Interactive UI sliders for growth rate, COGS %, opex — instant re-projection without re-upload~~ | ✅ Done — new `what_if_builder.py` module, `POST /whatif` endpoint, `/whatif` frontend page with 5 sliders, comparison table + chart |
 | **Multi-company Benchmarking** | Upload multiple companies' financials and compare side-by-side (same metrics, same chart) | Large |
 | **Working Capital Analytics** | Track DSO, DPO, DIO trends with Monte Carlo forecast | Medium |
 | **Automated Report Generation** | Generate downloadable PDF/Excel reports with charts + narrative | Medium |
@@ -293,6 +293,7 @@ Beyond the active sprint, these features are candidates for future development:
 | Data quality scoring | None | None | None | ✅ Per-metric 0-1 score + A-F grade | ✅ (stale files auto-cleaned) | ✅ | Per metric |
 | Fan chart visualization | None | None | None | ✅ Multi-period (8Q) with confidence bands | ✅ (saved to OUTPUT_DIR) | ✅ | Time-series viz |
 | Scenario comparison | None | None | None | None | None | ✅ 3-panel chart + sliders UI + 12-metric table | What-if analysis |
+| What-if builder | None | None | None | None | None | None | ✅ Interactive sliders + instant projection |
 | Query caching | None | None | None | None | ✅ SHA-256 + file-based + 1h TTL | ✅ | Avoid re-runs |
 | Structured logging | None | None | None | None | ✅ JSON-structured + LOG_LEVEL | ✅ | Audit trail |
 | Test coverage | 0% | 0% | 0% | 0% | ~72% (66 tests) | ~72% (66 tests) | >60% |
