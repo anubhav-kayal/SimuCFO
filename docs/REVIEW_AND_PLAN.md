@@ -250,7 +250,7 @@ Beyond the active sprint, these features are candidates for future development:
 | **Chat History & Follow-up** | Maintain conversation context for drill-down questions (e.g. "Why? Tell me more about revenue risk") | Medium |
 | **Anomaly Detection** | Flag unusual metric jumps across periods using statistical heuristics (z-score, IQR) | Small |
 | **Forecast Model Comparison** | Compare Monte Carlo vs ARIMA vs Prophet forecasts on the same chart | Large |
-| **Executive Summary** | Auto-generated one-paragraph CEO-ready summary of key risks and opportunities | Small |
+| ~~**Executive Summary**~~ | ~~Auto-generated one-paragraph CEO-ready summary of key risks and opportunities~~ | ✅ Done — rule-based `executive_summary.py` generates findings, risks, opportunities from MC stats |
 
 ### 🧩 Data Pipeline
 
@@ -258,7 +258,7 @@ Beyond the active sprint, these features are candidates for future development:
 |---------|-------------|--------|
 | **Excel / CSV / API Ingestion** | Beyond PDFs — direct spreadsheet upload, QuickBooks/Xero API integration | Medium |
 | **Bulk Historical Import** | Upload 3-5 years of data for richer distribution fitting (currently single-period) | Medium |
-| **Automated Data Validation** | Flag outliers, missing periods, inconsistent metric trends on ingestion | Small |
+| ~~**Automated Data Validation**~~ | ~~Flag outliers, missing periods, inconsistent metric trends on ingestion~~ | ✅ Done — `data_validation.py` checks coverage, cross-field consistency, duplicates |
 
 ### 🎛 UX / Product
 
@@ -266,7 +266,7 @@ Beyond the active sprint, these features are candidates for future development:
 |---------|-------------|--------|
 | **Customizable Dashboard** | Drag-and-drop widgets: key metrics, charts, risk gauges | Large |
 | **Scheduled / Recurring Analysis** | Auto-run monthly simulations and email the report | Medium |
-| **Share by Link** | Generate shareable report URLs without requiring login | Small |
+| ~~**Share by Link**~~ | ~~Generate shareable report URLs without requiring login~~ | ✅ Done — `POST /share` creates 7-day tokens, `GET /share/:token` renders shared view |
 | **Export to PPT** | One-click slide deck for board meetings | Medium |
 
 ### 🛠 Infrastructure
@@ -274,7 +274,7 @@ Beyond the active sprint, these features are candidates for future development:
 | Feature | Description | Effort |
 |---------|-------------|--------|
 | **User Auth (Supabase)** | Multi-tenant login/signup, personal dashboard, saved analyses | Medium |
-| **Docker Compose** | One-command self-hosted deployment with all services | Small |
+| ~~**Docker Compose**~~ | ~~One-command self-hosted deployment with all services~~ | ✅ Done — `docker-compose.yml` with backend + frontend containers |
 | **Rate Limiting & Usage Tracking** | Per-user rate limits, feature usage analytics | Medium |
 
 ---
@@ -294,6 +294,10 @@ Beyond the active sprint, these features are candidates for future development:
 | Fan chart visualization | None | None | None | ✅ Multi-period (8Q) with confidence bands | ✅ (saved to OUTPUT_DIR) | ✅ | Time-series viz |
 | Scenario comparison | None | None | None | None | None | ✅ 3-panel chart + sliders UI + 12-metric table | What-if analysis |
 | What-if builder | None | None | None | None | None | None | ✅ Interactive sliders + instant projection |
+| Executive summary | None | None | None | None | None | None | ✅ Rule-based findings/risks/opportunities |
+| Data validation | None | None | None | None | None | None | ✅ Coverage + cross-field checks |
+| Share by link | None | None | None | None | None | None | ✅ 7-day token + share page |
+| Docker Compose | None | None | None | None | None | None | ✅ Backend + frontend containers |
 | Query caching | None | None | None | None | ✅ SHA-256 + file-based + 1h TTL | ✅ | Avoid re-runs |
 | Structured logging | None | None | None | None | ✅ JSON-structured + LOG_LEVEL | ✅ | Audit trail |
 | Test coverage | 0% | 0% | 0% | 0% | ~72% (66 tests) | ~72% (66 tests) | >60% |
