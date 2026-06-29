@@ -11,6 +11,10 @@ const sessionStore = require('../utils/sessionStore');
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const INPUTS_DIR = path.join(__dirname, '..', '..', 'data-scripts', 'inputs');
 const VENV_PYTHON = path.join(__dirname, '..', '..', 'venv', 'bin', 'python');
+const SYSTEM_PYTHON = 'python3';
+function getPythonPath() {
+  return fs.existsSync(VENV_PYTHON) ? VENV_PYTHON : SYSTEM_PYTHON;
+}
 const PDF_SCRIPT = path.join(__dirname, '..', '..', 'data-scripts', 'extractors', 'pdfProcessor.py');
 const MC_SCRIPT = path.join(__dirname, '..', '..', 'ml-simulator', 'montecarlo.py');
 const MC_OUTPUT_DIR = path.join(__dirname, '..', '..', 'ml-simulator');
@@ -26,7 +30,8 @@ function readJsonIfExists(filePath) {
 
 async function runPythonScript(scriptPath, args = [], options = {}) {
   const quotedArgs = args.map(a => `"${a.replace(/"/g, '\\"')}"`).join(' ');
-  const command = `"${VENV_PYTHON}" "${scriptPath}" ${quotedArgs}`;
+  const python = getPythonPath();
+  const command = `"${python}" "${scriptPath}" ${quotedArgs}`;
   const { stdout, stderr } = await exec(command, {
     timeout: EXEC_TIMEOUT_MS,
     ...options,
