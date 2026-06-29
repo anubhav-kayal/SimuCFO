@@ -37,6 +37,7 @@ from ratio_dashboard import compute_ratios
 from sensitivity_analysis import run_sensitivity, plot_tornado, plot_tornado_absolute
 from anomaly_detection import run_anomaly_detection
 from what_if_builder import what_if_from_session, run_what_if_comparison, apply_what_if_overrides
+from executive_summary import generate_executive_summary
 
 
 async def answer_question_async(question: str, client: BackboardClient, nlp_assistant_id: str, interpreter_assistant_id: str, generate_plot: bool = False, generate_fan_charts: bool = False) -> Dict:
@@ -399,6 +400,8 @@ async def answer_question_async(question: str, client: BackboardClient, nlp_assi
         },
         "monte_carlo_facts": mc_facts
     }
+
+    comprehensive_response["executive_summary"] = generate_executive_summary(comprehensive_response)
 
     # Store plot metadata
     plot_metadata = None

@@ -505,6 +505,7 @@ exports.handleUpload = async (req, res) => {
         dataQuality: fullAnalysis.monte_carlo_simulation?.data_quality || null,
         ratioDashboard: fullAnalysis.ratio_dashboard || null,
         anomalyDetection: fullAnalysis.anomaly_detection || null,
+        executiveSummary: fullAnalysis.executive_summary || null,
       };
     } else if (metrics) {
       responseData = {

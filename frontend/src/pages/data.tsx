@@ -19,6 +19,7 @@ export default function Data() {
   const [fanCharts, setFanCharts] = useState<any>(null);
   const [ratioDashboard, setRatioDashboard] = useState<any>(null);
   const [anomalyDetection, setAnomalyDetection] = useState<any>(null);
+  const [executiveSummary, setExecutiveSummary] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -36,6 +37,7 @@ export default function Data() {
       if (d.fanCharts) setFanCharts(d.fanCharts);
       if (d.ratioDashboard) setRatioDashboard(d.ratioDashboard);
       if (d.anomalyDetection) setAnomalyDetection(d.anomalyDetection);
+      if (d.executiveSummary) setExecutiveSummary(d.executiveSummary);
     }
     if (location.state?.sessionId) {
       setSessionId(location.state.sessionId);
@@ -193,7 +195,81 @@ export default function Data() {
               </h3>
             </div>
 
-            {/* 2. Document Structure */}
+            {/* 2. Executive Summary */}
+            {executiveSummary && (
+              <div className="bg-gradient-to-br from-[#1a1a1a] to-[#2d1b4e] text-white p-8 rounded-[30px] shadow-2xl relative overflow-hidden">
+                <div className="absolute top-[-30px] right-[-30px] w-24 h-24 bg-[#8c52ff] rounded-full blur-[60px] opacity-50" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <FaBrain className="text-[#8c52ff] text-2xl" />
+                    <h2 className="text-xl font-bold">Executive Summary</h2>
+                    <div className="ml-auto flex gap-2">
+                      {executiveSummary.cash_outlook && (
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          executiveSummary.cash_outlook === 'strong' ? 'bg-emerald-500/20 text-emerald-400' :
+                          executiveSummary.cash_outlook === 'critical' ? 'bg-red-500/20 text-red-400' :
+                          'bg-amber-500/20 text-amber-400'
+                        }`}>
+                          Cash: {executiveSummary.cash_outlook}
+                        </span>
+                      )}
+                      {executiveSummary.revenue_outlook && (
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          executiveSummary.revenue_outlook === 'positive' ? 'bg-emerald-500/20 text-emerald-400' :
+                          executiveSummary.revenue_outlook === 'negative' ? 'bg-red-500/20 text-red-400' :
+                          'bg-amber-500/20 text-amber-400'
+                        }`}>
+                          Revenue: {executiveSummary.revenue_outlook}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {executiveSummary.key_findings?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-bold text-[#8c52ff] uppercase tracking-wider mb-2">Key Findings</h3>
+                        <ul className="space-y-2">
+                          {executiveSummary.key_findings.map((f: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-200">
+                              <span className="text-[#8c52ff] mt-1">•</span>
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {executiveSummary.risks?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-2">Risks & Concerns</h3>
+                        <ul className="space-y-2">
+                          {executiveSummary.risks.map((r: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-200">
+                              <span className="text-red-400 mt-1">⚠</span>
+                              <span>{r}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {executiveSummary.opportunities?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-2">Opportunities</h3>
+                        <ul className="space-y-2">
+                          {executiveSummary.opportunities.map((o: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-200">
+                              <span className="text-emerald-400 mt-1">✓</span>
+                              <span>{o}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Document Structure */}
             {statementChunks && (
               <div className="bg-white p-6 rounded-[30px] shadow-sm border border-white">
                 <div className="flex items-center gap-3 mb-6">
